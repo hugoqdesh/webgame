@@ -1,0 +1,63 @@
+:root {
+  --arena-width: 900px;
+  --arena-height: 600px;
+  --bg: #0b1014;
+  --panel: #141b21;
+  --text: #e7edf3;
+  --accent: #4fd1c5;
+  --danger: #f56565;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Trebuchet MS", Verdana, sans-serif;
+  background: radial-gradient(circle at 20% 20%, #12202b, #0b1014 55%, #05080b);
+  color: var(--text);
+}
+
+#app {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 16px;
+  padding: 16px;
+}
+
+#arena {
+  position: relative;
+  width: var(--arena-width);
+  height: var(--arena-height);
+  background: linear-gradient(135deg, #0f141a 0%, #0b1014 100%);
+  border: 2px solid #1f2a33;
+  overflow: hidden;
+}
+
+#players,
+#projectiles,
+#walls {
+  position: absolute;
+  inset: 0;
+}
+
+#hud {
+  display: grid;
+  gap: 12px;
+}
+
+#timer {
+  font-size: 24px;
+  padding: 8px 12px;
+  background: var(--panel);
+  border: 1px solid #1f2a33;
+}
+
+#scoreboard,
+#notifications {
+  background: var(--panel);
+  border: 1px solid #1f2a33;
+  padding: 8px 12px;
+  min-height: 120px;
+}

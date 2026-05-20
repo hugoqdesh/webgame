@@ -1,0 +1,16 @@
+{
+  "name": "multi-player",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,client -c blue,green \"npm:dev:server\" \"npm:dev:client\"",
+    "dev:server": "npm --workspace apps/server run dev",
+    "dev:client": "npm --workspace apps/client run dev"
+  },
+  "devDependencies": {
+    "concurrently": "^9.0.0"
+  }
+}
