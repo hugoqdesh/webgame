@@ -6,6 +6,7 @@ Monorepo layout:
 - packages/shared: Shared protocol + config
 
 Dev scripts:
-- npm run dev
-- npm run dev:client
-- npm run dev:server
+- "dev": "vite apps/client --port 5173",
+- "dev:client": "vite apps/client --port 5173",
+- "dev:server": "node apps/server/src/index.js",
+- "dev:all": "concurrently \"npm:dev:server\" \"npm:dev:client\"",
