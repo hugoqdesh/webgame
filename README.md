@@ -12,3 +12,4 @@ Dev scripts:
 - "dev:client": "vite apps/client --port 5173",
 - "dev:server": "node apps/server/src/index.js",
 - "dev:all": "concurrently \"npm:dev:server\" \"npm:dev:client\"",
+  
