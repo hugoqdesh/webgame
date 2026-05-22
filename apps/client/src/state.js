@@ -1,6 +1,6 @@
 export const state = {
   world: {
-    width: 800,
+    width: 900,
     height: 600,
   },
 

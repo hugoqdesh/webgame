@@ -13,6 +13,7 @@
 }
 
 body {
+  height: 100vh;
   margin: 0;
   font-family: "Trebuchet MS", Verdana, sans-serif;
   background: radial-gradient(circle at 20% 20%, #12202b, #0b1014 55%, #05080b);
