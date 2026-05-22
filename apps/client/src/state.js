@@ -8,8 +8,8 @@ export const state = {
     player1: {
       id: "player1",
       health: 100,
-      posx: 100,
-      posy: 100,
+      x: 100,
+      y: 100,
       vx: 0,
       vy: 0,
     },
@@ -17,8 +17,8 @@ export const state = {
     player2: {
       id: "player2",
       health: 100,
-      posx: 100,
-      posy: 100,
+      x: 100,
+      y: 100,
       vx: 0,
       vy: 0,
     },
@@ -26,8 +26,8 @@ export const state = {
     player3: {
       id: "player3",
       health: 100,
-      posx: 300,
-      posy: 300,
+      x: 300,
+      y: 300,
       vx: 0,
       vy: 0,
     },
@@ -35,8 +35,8 @@ export const state = {
     player4: {
       id: "player4",
       health: 100,
-      posx: 400,
-      posy: 400,
+      x: 400,
+      y: 400,
       vx: 0,
       vy: 0,
     },
