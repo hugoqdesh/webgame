@@ -18,6 +18,8 @@ body {
   font-family: "Trebuchet MS", Verdana, sans-serif;
   background: radial-gradient(circle at 20% 20%, #12202b, #0b1014 55%, #05080b);
   color: var(--text);
+  display: grid;
+  align-items: center;
 }
 
 #app {
@@ -25,6 +27,9 @@ body {
   grid-template-columns: 1fr 260px;
   gap: 16px;
   padding: 16px;
+  align-items: center;
+  width: fit-content;
+  margin:auto;
 }
 
 #arena {
