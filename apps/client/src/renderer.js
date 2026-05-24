@@ -1,14 +1,26 @@
-import { state } from "./state";
+import { clientState } from "./state.js";
+
+const playerElements = {};
+const container = document.getElementById("players");
 
 export function render() {
-  for (const id in state.players) {
-    const player = state.players[id];
-    let playerElement = document.getElementById("players");
-    if (!playerElement) {
-      playerElement = document.createElement("div");
+  for (const id in clientState.players) {
+    const player = clientState.players[id];
+
+    if (!playerElements[id]) {
+      let playerElement = document.createElement("div");
       playerElement.id = player.id;
-      playerElement.appendChild(playerElement);
-      //not working, WIP
+      playerElement.classList.add("player");
+
+      //Save it into our cache
+      playerElements[id] = playerElement;
+
+      container.appendChild(playerElement);
     }
+
+    // Now that we guarantee the element exists, we can move it.
+    // Using transform: translate() is GPU accelerated and much faster than top/left
+    const element = playerElements[id];
+    element.style.transform = `translate(${player.x}px, ${player.y}px)`;
   }
 }

@@ -48,6 +48,34 @@ body {
   inset: 0;
 }
 
+.player {
+  position: absolute;
+  left: 0;
+  top: 0;
+  border-radius: 10px;
+  background: linear-gradient(180deg, var(--accent), #1b8f84);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+  border: 2px solid rgba(255, 255, 255, 0.12);
+  display: grid;
+  place-items: center;
+  color: #27bee8;
+  font-weight: 700;
+  will-change: transform;
+  height: 15px;
+  width: 15px;
+}
+
+.player--self {
+  outline: 3px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(180deg, #ffe066, #f59f00);
+}
+
+.player__label {
+  pointer-events: none;
+  font-size: 12px;
+  user-select: none;
+}
+
 #hud {
   display: grid;
   gap: 12px;
