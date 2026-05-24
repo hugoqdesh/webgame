@@ -20,7 +20,7 @@ const allowedKeys = new Set([
   "s",
 ]);
 
-export function recordInput() {
+export function initInput() {
   // TODO: capture keyboard input and send to server
   addEventListener("keydown", (event) => {
     if (!allowedKeys.has(event.key)) return;
@@ -35,8 +35,9 @@ export function recordInput() {
     console.log("key '" + event.key + "' is set to: " + pressedKey[event.key]);
     console.log(pressedKey);
   });
+}
 
   export function getInputState() {
-    return allowedKeys;
+    return pressedKey;
   }
-}
+
