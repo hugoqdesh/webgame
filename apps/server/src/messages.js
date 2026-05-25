@@ -8,7 +8,11 @@ export function handleMessage({ socket, data, clients, simulation }) {
 
   switch (message.type) {
     case "input":
-      simulation.queueInput(socket, message.payload);
+      {
+        const client = clients.get(socket);
+        if (!client || !client.id) return;
+        simulation.queueInput(client.id, message.payload || {});
+      }
       break;
     default:
       break;
