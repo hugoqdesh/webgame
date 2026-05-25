@@ -15,18 +15,16 @@ export function createRoom() {
     }
   }
 
-  function handleConnection(socket) {
-    const playerId = simulation.assignPlayer();
-    if (!playerId) {
-      socket.close(1008, "Room full");
-      return;
-    }
+  function broadcastLobby() {
+    broadcast(JSON.stringify(simulation.getLobbyState()));
+  }
 
-    clients.set(socket, { id: playerId });
-    socket.send(JSON.stringify({ type: "welcome", playerId }));
+  function handleConnection(socket) {
+    clients.set(socket, { id: null, name: null });
+    socket.send(JSON.stringify(simulation.getLobbyState()));
 
     socket.on("message", (data) => {
-      handleMessage({ socket, data, clients, simulation });
+      handleMessage({ socket, data, clients, simulation, broadcast });
     });
 
     socket.on("close", () => {
@@ -35,6 +33,7 @@ export function createRoom() {
         simulation.removePlayer(client.id);
       }
       clients.delete(socket);
+      broadcastLobby();
     });
   }
 

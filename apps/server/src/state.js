@@ -22,7 +22,8 @@ export const state = {
   players: {
     player1: {
       id: "player1",
-      name: "Player 1",
+      name: null,
+      isLead: false,
       active: false,
       health: 100,
       size: PLAYER_SIZE,
@@ -38,7 +39,8 @@ export const state = {
 
     player2: {
       id: "player2",
-      name: "Player 2",
+      name: null,
+      isLead: false,
       active: false,
       health: 100,
       size: PLAYER_SIZE,
@@ -54,7 +56,8 @@ export const state = {
 
     player3: {
       id: "player3",
-      name: "Player 3",
+      name: null,
+      isLead: false,
       active: false,
       health: 100,
       size: PLAYER_SIZE,
@@ -70,7 +73,8 @@ export const state = {
 
     player4: {
       id: "player4",
-      name: "Player 4",
+      name: null,
+      isLead: false,
       active: false,
       health: 100,
       size: PLAYER_SIZE,

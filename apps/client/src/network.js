@@ -14,6 +14,30 @@ export function connect() {
       const msg = JSON.parse(ev.data);
       if (msg.type === "welcome") {
         clientState.playerId = msg.playerId;
+        clientState.name = msg.name || null;
+        clientState.isLead = !!msg.isLead;
+        window.dispatchEvent(new CustomEvent("lobby:update"));
+        return;
+      }
+      if (msg.type === "lobby") {
+        clientState.phase = msg.phase || clientState.phase;
+        clientState.lobbyPlayers = msg.players || [];
+        clientState.canStart = !!msg.canStart;
+        if (msg.leadId && clientState.playerId) {
+          clientState.isLead = msg.leadId === clientState.playerId;
+        }
+        clientState.error = null;
+        window.dispatchEvent(new CustomEvent("lobby:update"));
+        return;
+      }
+      if (msg.type === "phase") {
+        clientState.phase = msg.phase || clientState.phase;
+        window.dispatchEvent(new CustomEvent("phase:update"));
+        return;
+      }
+      if (msg.type === "error") {
+        clientState.error = msg.message || "Unknown error";
+        window.dispatchEvent(new CustomEvent("lobby:update"));
         return;
       }
       if (msg.type === "snapshot" && msg.players) {
