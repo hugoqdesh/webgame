@@ -2,6 +2,7 @@ import { GAME_CONFIG } from "../../../packages/shared/src/config.js";
 
 const PLAYER_SIZE = 32;
 
+// Server-authoritative state shared by all clients through snapshots.
 export const state = {
   world: {
     width: GAME_CONFIG.arenaWidth,
@@ -10,6 +11,7 @@ export const state = {
 
   projectiles: [],
 
+  // Timer fields are reserved for later phases; not used in current flow.
   timer: {
     durationMs: 180000,
     startedAt: null,
@@ -17,6 +19,7 @@ export const state = {
     pausedTotalMs: 0,
   },
 
+  // Phase gates simulation and input processing.
   phase: "lobby",
 
   players: {

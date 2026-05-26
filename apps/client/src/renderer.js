@@ -4,6 +4,7 @@ const playerElements = {};
 const container = document.getElementById("players");
 
 export function render() {
+  // Reuse DOM nodes; only create/remove when players join/leave.
   const activeIds = new Set();
 
   for (const id in clientState.players) {

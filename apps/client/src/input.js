@@ -21,6 +21,7 @@ const allowedKeys = new Set([
 ]);
 
 export function initInput() {
+  // Capture local intent only; server remains the source of truth.
   addEventListener("keydown", (event) => {
     if (!allowedKeys.has(event.key)) return;
     pressedKey[event.key] = true;
@@ -33,6 +34,7 @@ export function initInput() {
 }
 
 export function getInputState() {
+  // Normalize to a tiny payload for network efficiency.
   return {
     left: pressedKey.ArrowLeft || pressedKey.a,
     right: pressedKey.ArrowRight || pressedKey.d,
