@@ -95,6 +95,11 @@ input:focus {
 	border-color: var(--fg);
 }
 
+input:disabled {
+	color: var(--mu);
+	cursor: not-allowed;
+}
+
 button {
 	cursor: pointer;
 }

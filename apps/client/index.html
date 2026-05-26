@@ -26,8 +26,21 @@
 			</div>
 
 			<div id="lobby">
-				<form id="join-form" autocomplete="off">
-					<input id="player-name" placeholder="name" maxlength="12" required />
+				<form id="join-form" autocomplete="off" novalidate>
+					<input
+						id="player-name"
+						name="player-name"
+						type="text"
+						placeholder="name"
+						maxlength="12"
+						autocomplete="off"
+						autocapitalize="off"
+						autocorrect="off"
+						spellcheck="false"
+						aria-label="player name"
+						aria-describedby="join-error"
+						required
+					/>
 					<button type="submit">join</button>
 				</form>
 				<div id="lobby-players"></div>
