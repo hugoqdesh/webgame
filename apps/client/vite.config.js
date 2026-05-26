@@ -1,4 +1,4 @@
-import { resolve } from 'path';
+import { resolve } from "path";
 
 /**
  * Vite config for the client app.
@@ -7,25 +7,25 @@ import { resolve } from 'path';
  * - Allows the dev server to serve files from the shared package
  */
 export default {
-  server: {
-    port: 5173,
-    strictPort: false,
-    proxy: {
-      '/ws': {
-        target: 'ws://localhost:8080',
-        ws: true,
-        changeOrigin: true
-      }
-    },
-    fs: {
-      // Allow serving files from the client directory and the shared package
-      allow: [resolve(__dirname), resolve(__dirname, '../../packages/shared')]
-    }
-  },
-  resolve: {
-    alias: {
-      '@shared': resolve(__dirname, '../../packages/shared/src')
-    }
-  },
-  base: '/'
+	server: {
+		port: 5173,
+		strictPort: false,
+		proxy: {
+			"/ws": {
+				target: "ws://localhost:8080",
+				ws: true,
+				changeOrigin: true,
+			},
+		},
+		fs: {
+			// Allow serving files from the client directory and the shared package
+			allow: [resolve(__dirname), resolve(__dirname, "../../packages/shared")],
+		},
+	},
+	resolve: {
+		alias: {
+			"@shared": resolve(__dirname, "../../packages/shared/src"),
+		},
+	},
+	base: "/",
 };
