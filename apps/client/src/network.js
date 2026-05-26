@@ -3,6 +3,7 @@ import { clientState } from "./state.js";
 export function connect() {
   const proto = location.protocol === "https:" ? "wss" : "ws";
   const url = `${proto}://${location.hostname}:8080`;
+  // Separate socket per browser tab; server remains authoritative.
   const socket = new WebSocket(url);
 
   socket.addEventListener("open", () => {
@@ -12,6 +13,7 @@ export function connect() {
   socket.addEventListener("message", (ev) => {
     try {
       const msg = JSON.parse(ev.data);
+      // Lobby and phase messages drive UI; snapshots drive rendering.
       if (msg.type === "welcome") {
         clientState.playerId = msg.playerId;
         clientState.name = msg.name || null;
@@ -41,6 +43,11 @@ export function connect() {
         return;
       }
       if (msg.type === "snapshot" && msg.players) {
+        // Ignore duplicate snapshots to avoid redundant work.
+        if (msg.snapshotId === clientState.snapshotId) {
+          return;
+        }
+        clientState.snapshotId = msg.snapshotId ?? clientState.snapshotId;
         clientState.players = msg.players;
       }
     } catch {

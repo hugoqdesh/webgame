@@ -8,6 +8,7 @@ export function createRoom() {
   });
 
   function broadcast(payload) {
+    // Broadcast keeps clients in sync; gameplay still lives on the server.
     for (const socket of clients.keys()) {
       if (socket.readyState === 1) {
         socket.send(payload);
@@ -20,6 +21,7 @@ export function createRoom() {
   }
 
   function handleConnection(socket) {
+    // Connections join the lobby first; player slots are assigned on join.
     clients.set(socket, { id: null, name: null });
     socket.send(JSON.stringify(simulation.getLobbyState()));
 

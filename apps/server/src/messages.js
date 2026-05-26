@@ -15,6 +15,7 @@ export function handleMessage({
   switch (message.type) {
     case "join":
       {
+        // Join flow: validate name and activate player slot.
         const client = clients.get(socket);
         if (!client) return;
         if (client.id) {
@@ -46,6 +47,7 @@ export function handleMessage({
       break;
     case "start":
       {
+        // Start flow: only lead player can trigger phase change.
         const client = clients.get(socket);
         if (!client || !client.id) return;
         const result = simulation.startGame(client.id);
@@ -58,6 +60,7 @@ export function handleMessage({
       break;
     case "input":
       {
+        // Inputs are mapped to a player id; clients do not move themselves.
         const client = clients.get(socket);
         if (!client || !client.id) return;
         simulation.queueInput(client.id, message.payload || {});

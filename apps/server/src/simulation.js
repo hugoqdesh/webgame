@@ -14,7 +14,8 @@ function normalizeName(name) {
   return String(name).trim().slice(0, NAME_MAX);
 }
 
-function buildSnapshot() {
+function buildSnapshot(snapshotId, ts) {
+  // Keep snapshots small and stable; clients use these for rendering only.
   const players = {};
   for (const id in state.players) {
     const player = state.players[id];
@@ -30,6 +31,8 @@ function buildSnapshot() {
 
   return {
     type: "snapshot",
+    snapshotId,
+    ts,
     phase: state.phase,
     players,
   };
@@ -50,9 +53,14 @@ function ensureLead() {
 
 export function createSimulation(onSnapshot) {
   let lastTick = Date.now();
+  let lastSnapshotAt = 0;
+  let snapshotId = 0;
+  let snapshotDirty = true;
 
   function updatePlayers() {
-    if (state.phase !== "running") return;
+    // Server-authoritative movement: clients send intent only.
+    if (state.phase !== "running") return false;
+    let moved = false;
     for (const id in state.players) {
       const player = state.players[id];
       if (!player.active) continue;
@@ -66,9 +74,15 @@ export function createSimulation(onSnapshot) {
       if (input.up) dy -= PLAYER_SPEED;
       if (input.down) dy += PLAYER_SPEED;
 
-      player.x = clamp(player.x + dx, 0, state.world.width - player.size);
-      player.y = clamp(player.y + dy, 0, state.world.height - player.size);
+      const nextX = clamp(player.x + dx, 0, state.world.width - player.size);
+      const nextY = clamp(player.y + dy, 0, state.world.height - player.size);
+      if (nextX !== player.x || nextY !== player.y) {
+        moved = true;
+      }
+      player.x = nextX;
+      player.y = nextY;
     }
+    return moved;
   }
 
   function tick() {
@@ -76,8 +90,20 @@ export function createSimulation(onSnapshot) {
     const delta = now - lastTick;
     if (delta >= SERVER_CONFIG.tickMs) {
       lastTick = now;
-      updatePlayers();
-      onSnapshot(buildSnapshot());
+      if (updatePlayers()) {
+        snapshotDirty = true;
+      }
+      if (
+        state.phase === "running" &&
+        snapshotDirty &&
+        now - lastSnapshotAt >= SERVER_CONFIG.snapshotMs
+      ) {
+        // Throttle snapshots to avoid redundant bandwidth and client work.
+        snapshotId += 1;
+        onSnapshot(buildSnapshot(snapshotId, now));
+        lastSnapshotAt = now;
+        snapshotDirty = false;
+      }
     }
   }
 
@@ -85,6 +111,7 @@ export function createSimulation(onSnapshot) {
 
   return {
     getLobbyState() {
+      // Lobby state is derived server-side to keep all clients consistent.
       const activePlayers = getActivePlayers();
       const leadId = ensureLead();
       return {
@@ -100,6 +127,7 @@ export function createSimulation(onSnapshot) {
       };
     },
     assignPlayer(name) {
+      // Enforce unique names and capacity before a player is activated.
       if (state.phase !== "lobby") {
         return { error: "Game already started" };
       }
@@ -146,6 +174,7 @@ export function createSimulation(onSnapshot) {
       ensureLead();
     },
     startGame(requesterId) {
+      // Only lead player can start; this prevents race conditions.
       if (state.phase !== "lobby") {
         return { error: "Game already started" };
       }
@@ -160,9 +189,11 @@ export function createSimulation(onSnapshot) {
       }
 
       state.phase = "running";
+      snapshotDirty = true;
       return { started: true };
     },
     queueInput(playerId, input) {
+      // Inputs are accepted only while running to keep simulation deterministic.
       if (state.phase !== "running") return;
       const player = state.players[playerId];
       if (!player || !player.active) return;

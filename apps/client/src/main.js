@@ -25,8 +25,28 @@ const nameInput = document.getElementById("player-name");
 const joinError = document.getElementById("join-error");
 const lobbyList = document.getElementById("lobby-players");
 const startButton = document.getElementById("start-button");
+let lastLobbyKey = null;
+let lastRenderedSnapshotId = null;
 
 function updateLobbyUI() {
+  // Avoid rebuilding lobby DOM if nothing relevant changed.
+  const lobbyKey = [
+    clientState.phase,
+    clientState.error || "",
+    clientState.canStart ? "1" : "0",
+    clientState.isLead ? "1" : "0",
+    clientState.lobbyPlayers
+      .map(
+        (player) => `${player.id}:${player.name}:${player.isLead ? "1" : "0"}`,
+      )
+      .join(","),
+  ].join("|");
+
+  if (lobbyKey === lastLobbyKey) {
+    return;
+  }
+  lastLobbyKey = lobbyKey;
+
   if (clientState.phase === "running") {
     lobbyEl.classList.add("hidden");
     gameEl.classList.remove("hidden");
@@ -58,12 +78,14 @@ joinForm.addEventListener("submit", (event) => {
     return;
   }
   if (socket.readyState === WebSocket.OPEN) {
+    // Send a single join request; server validates uniqueness and capacity.
     socket.send(JSON.stringify({ type: "join", payload: { name } }));
   }
 });
 
 startButton.addEventListener("click", () => {
   if (socket.readyState === WebSocket.OPEN) {
+    // Only the lead player is allowed to start the match.
     socket.send(JSON.stringify({ type: "start" }));
   }
 });
@@ -75,12 +97,17 @@ updateLobbyUI();
 
 function loop() {
   if (clientState.phase === "running") {
-    render();
+    // Render only when a new snapshot arrives to reduce DOM churn.
+    if (clientState.snapshotId !== lastRenderedSnapshotId) {
+      render();
+      lastRenderedSnapshotId = clientState.snapshotId;
+    }
   }
 
   const now = performance.now();
   const input = getInputState();
   if (clientState.phase === "running" && socket.readyState === WebSocket.OPEN) {
+    // Throttle input sends; only transmit on change or after a short interval.
     if (!lastInput || !inputsEqual(lastInput, input) || now - lastSent > 100) {
       socket.send(JSON.stringify({ type: "input", payload: input }));
       lastSent = now;
