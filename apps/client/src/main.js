@@ -25,6 +25,7 @@ const nameInput = document.getElementById("player-name");
 const joinSubmit = joinForm.querySelector("button[type=submit]");
 const joinError = document.getElementById("join-error");
 const lobbyList = document.getElementById("lobby-players");
+const lobbyStatus = document.getElementById("lobby-status");
 const startButton = document.getElementById("start-button");
 let lastLobbyKey = null;
 let lastRenderedSnapshotId = null;
@@ -37,11 +38,20 @@ function updateJoinForm() {
 	joinSubmit.textContent = joined ? "joined" : ready ? "join" : "…";
 }
 
+function lobbyStatusText() {
+	if (!clientState.playerId) return "";
+	if (!clientState.canStart) return "waiting for players…";
+	if (clientState.isLead) return "ready — click start";
+	return "waiting for lead to start…";
+}
+
 function updateLobbyUI() {
+	joinError.textContent = clientState.error || "";
+	lobbyStatus.textContent = lobbyStatusText();
+
 	// Avoid rebuilding lobby DOM if nothing relevant changed.
 	const lobbyKey = [
 		clientState.phase,
-		clientState.error || "",
 		clientState.canStart ? "1" : "0",
 		clientState.isLead ? "1" : "0",
 		clientState.lobbyPlayers
@@ -56,7 +66,6 @@ function updateLobbyUI() {
 	}
 	lastLobbyKey = lobbyKey;
 
-	joinError.textContent = clientState.error || "";
 	lobbyList.innerHTML = "";
 
 	for (const player of clientState.lobbyPlayers) {
@@ -66,8 +75,8 @@ function updateLobbyUI() {
 		lobbyList.appendChild(item);
 	}
 
-	const canStart = clientState.canStart && clientState.isLead;
-	startButton.disabled = !canStart;
+	startButton.hidden = !clientState.isLead;
+	startButton.disabled = !clientState.canStart;
 }
 
 joinForm.addEventListener("submit", (event) => {

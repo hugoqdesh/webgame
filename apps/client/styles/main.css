@@ -126,6 +126,15 @@ button:disabled {
 	content: "—";
 }
 
+#lobby-status {
+	color: var(--mu);
+	font-style: italic;
+}
+
+#lobby-status:empty {
+	display: none;
+}
+
 .lobby-player {
 	display: inline;
 	color: var(--fg);
