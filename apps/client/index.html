@@ -8,15 +8,32 @@
   </head>
   <body>
     <div id="app">
-      <div id="arena">
-        <div id="walls"></div>
-        <div id="players"></div>
-        <div id="projectiles"></div>
+      <div id="lobby" class="panel">
+        <h1>Join the arena</h1>
+        <form id="join-form">
+          <label for="player-name">Player name</label>
+          <input id="player-name" name="player-name" maxlength="12" required />
+          <button type="submit">Join</button>
+        </form>
+        <div id="join-error" class="error"></div>
+        <div class="lobby-section">
+          <h2>Players</h2>
+          <div id="lobby-players" class="lobby-list"></div>
+        </div>
+        <button id="start-button" disabled>Start game</button>
       </div>
-      <div id="hud">
-        <div id="timer">00:00</div>
-        <div id="scoreboard"></div>
-        <div id="notifications"></div>
+
+      <div id="game" class="hidden">
+        <div id="arena">
+          <div id="walls"></div>
+          <div id="players"></div>
+          <div id="projectiles"></div>
+        </div>
+        <div id="hud">
+          <div id="timer">00:00</div>
+          <div id="scoreboard"></div>
+          <div id="notifications"></div>
+        </div>
       </div>
     </div>
     <script type="module" src="/src/main.js"></script>

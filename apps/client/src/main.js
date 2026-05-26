@@ -1,30 +1,94 @@
 import { connect } from "./network.js";
-import { initInput } from "./input.js";
+import { initInput, getInputState } from "./input.js";
 import { render } from "./renderer.js";
-import { getInputState } from "./input.js";
 import { clientState } from "./state.js";
 
-//connect();
+const socket = connect();
 initInput();
-function loop() {
-  requestAnimationFrame(loop);
-  const inputs = getInputState();
-  const player = clientState.players.player1;
-  const speed = 3;
 
-  if (inputs.ArrowRight || inputs.d) {
-    player.x += speed;
-  }
-  if (inputs.ArrowLeft || inputs.a) {
-    player.x -= speed;
-  }
-  if (inputs.ArrowUp || inputs.w) {
-    player.y -= speed;
-  }
-  if (inputs.ArrowDown || inputs.s) {
-    player.y += speed;
-  }
-  console.log(getInputState());
-  render();
+let lastSent = 0;
+let lastInput = null;
+
+function inputsEqual(a, b) {
+  return (
+    a.left === b.left &&
+    a.right === b.right &&
+    a.up === b.up &&
+    a.down === b.down
+  );
 }
-loop();
+
+const lobbyEl = document.getElementById("lobby");
+const gameEl = document.getElementById("game");
+const joinForm = document.getElementById("join-form");
+const nameInput = document.getElementById("player-name");
+const joinError = document.getElementById("join-error");
+const lobbyList = document.getElementById("lobby-players");
+const startButton = document.getElementById("start-button");
+
+function updateLobbyUI() {
+  if (clientState.phase === "running") {
+    lobbyEl.classList.add("hidden");
+    gameEl.classList.remove("hidden");
+  } else {
+    lobbyEl.classList.remove("hidden");
+    gameEl.classList.add("hidden");
+  }
+
+  joinError.textContent = clientState.error || "";
+  lobbyList.innerHTML = "";
+
+  for (const player of clientState.lobbyPlayers) {
+    const item = document.createElement("div");
+    item.className = "lobby-player";
+    item.textContent = player.isLead ? `${player.name} (lead)` : player.name;
+    lobbyList.appendChild(item);
+  }
+
+  const canStart = clientState.canStart && clientState.isLead;
+  startButton.disabled = !canStart;
+}
+
+joinForm.addEventListener("submit", (event) => {
+  event.preventDefault();
+  const name = nameInput.value.trim();
+  if (!name) {
+    clientState.error = "Enter a name.";
+    updateLobbyUI();
+    return;
+  }
+  if (socket.readyState === WebSocket.OPEN) {
+    socket.send(JSON.stringify({ type: "join", payload: { name } }));
+  }
+});
+
+startButton.addEventListener("click", () => {
+  if (socket.readyState === WebSocket.OPEN) {
+    socket.send(JSON.stringify({ type: "start" }));
+  }
+});
+
+window.addEventListener("lobby:update", updateLobbyUI);
+window.addEventListener("phase:update", updateLobbyUI);
+
+updateLobbyUI();
+
+function loop() {
+  if (clientState.phase === "running") {
+    render();
+  }
+
+  const now = performance.now();
+  const input = getInputState();
+  if (clientState.phase === "running" && socket.readyState === WebSocket.OPEN) {
+    if (!lastInput || !inputsEqual(lastInput, input) || now - lastSent > 100) {
+      socket.send(JSON.stringify({ type: "input", payload: input }));
+      lastSent = now;
+      lastInput = { ...input };
+    }
+  }
+
+  requestAnimationFrame(loop);
+}
+
+requestAnimationFrame(loop);

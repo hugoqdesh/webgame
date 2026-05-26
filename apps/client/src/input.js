@@ -1,4 +1,4 @@
-let pressedKey = {
+const pressedKey = {
   ArrowLeft: false,
   ArrowRight: false,
   ArrowUp: false,
@@ -21,23 +21,22 @@ const allowedKeys = new Set([
 ]);
 
 export function initInput() {
-  // TODO: capture keyboard input and send to server
   addEventListener("keydown", (event) => {
     if (!allowedKeys.has(event.key)) return;
     pressedKey[event.key] = true;
-    console.log("key '" + event.key + "' is set to: " + pressedKey[event.key]);
-    console.log(pressedKey);
   });
 
   addEventListener("keyup", (event) => {
     if (!allowedKeys.has(event.key)) return;
     pressedKey[event.key] = false;
-    console.log("key '" + event.key + "' is set to: " + pressedKey[event.key]);
-    console.log(pressedKey);
   });
 }
 
-  export function getInputState() {
-    return pressedKey;
-  }
-
+export function getInputState() {
+  return {
+    left: pressedKey.ArrowLeft || pressedKey.a,
+    right: pressedKey.ArrowRight || pressedKey.d,
+    up: pressedKey.ArrowUp || pressedKey.w,
+    down: pressedKey.ArrowDown || pressedKey.s,
+  };
+}
