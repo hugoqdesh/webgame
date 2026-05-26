@@ -1,3 +1,3 @@
 export const CLIENT_CONFIG = {
-  snapshotBufferSize: 8
+	snapshotBufferSize: 8,
 };

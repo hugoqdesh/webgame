@@ -1,3 +1,3 @@
 export function updateHud() {
-  // TODO: update timer, scoreboard, notifications
+	// TODO: update timer, scoreboard, notifications
 }
