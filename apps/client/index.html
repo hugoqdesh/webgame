@@ -1,41 +1,45 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>DOM Arena Shooter</title>
-    <link rel="stylesheet" href="/styles/main.css" />
-  </head>
-  <body>
-    <div id="app">
-      <div id="lobby" class="panel">
-        <h1>Join the arena</h1>
-        <form id="join-form">
-          <label for="player-name">Player name</label>
-          <input id="player-name" name="player-name" maxlength="12" required />
-          <button type="submit">Join</button>
-        </form>
-        <div id="join-error" class="error"></div>
-        <div class="lobby-section">
-          <h2>Players</h2>
-          <div id="lobby-players" class="lobby-list"></div>
-        </div>
-        <button id="start-button" disabled>Start game</button>
-      </div>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Arena</title>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap"
+			rel="stylesheet"
+		/>
+		<link rel="stylesheet" href="/styles/main.css" />
+	</head>
+	<body>
+		<main id="app">
+			<header>
+				<span>arena</span>
+				<span id="timer">00:00</span>
+			</header>
 
-      <div id="game" class="hidden">
-        <div id="arena">
-          <div id="walls"></div>
-          <div id="players"></div>
-          <div id="projectiles"></div>
-        </div>
-        <div id="hud">
-          <div id="timer">00:00</div>
-          <div id="scoreboard"></div>
-          <div id="notifications"></div>
-        </div>
-      </div>
-    </div>
-    <script type="module" src="/src/main.js"></script>
-  </body>
+			<div id="game">
+				<div id="arena">
+					<div id="walls"></div>
+					<div id="players"></div>
+					<div id="projectiles"></div>
+				</div>
+			</div>
+
+			<div id="lobby">
+				<form id="join-form" autocomplete="off">
+					<input id="player-name" placeholder="name" maxlength="12" required />
+					<button type="submit">join</button>
+				</form>
+				<div id="lobby-players"></div>
+				<button id="start-button" disabled>start</button>
+			</div>
+
+			<div id="hud">
+				<p id="join-error" aria-live="polite"></p>
+				<div id="scoreboard"></div>
+				<div id="notifications"></div>
+			</div>
+		</main>
+		<script type="module" src="/src/main.js"></script>
+	</body>
 </html>

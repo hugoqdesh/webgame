@@ -47,14 +47,6 @@ function updateLobbyUI() {
   }
   lastLobbyKey = lobbyKey;
 
-  if (clientState.phase === "running") {
-    lobbyEl.classList.add("hidden");
-    gameEl.classList.remove("hidden");
-  } else {
-    lobbyEl.classList.remove("hidden");
-    gameEl.classList.add("hidden");
-  }
-
   joinError.textContent = clientState.error || "";
   lobbyList.innerHTML = "";
 

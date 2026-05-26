@@ -1,168 +1,145 @@
 :root {
-  --arena-width: 900px;
-  --arena-height: 600px;
-  --bg: #0b1014;
-  --panel: #141b21;
-  --text: #e7edf3;
-  --accent: #4fd1c5;
-  --danger: #f56565;
-}
-
-* {
-  box-sizing: border-box;
+	--w: 900px;
+	--h: 600px;
+	--fg: #e8e8e8;
+	--mu: #555;
 }
 
 body {
-  height: 100vh;
-  margin: 0;
-  font-family: "Trebuchet MS", Verdana, sans-serif;
-  background: radial-gradient(circle at 20% 20%, #12202b, #0b1014 55%, #05080b);
-  color: var(--text);
-  display: grid;
-  align-items: center;
+	margin: 0;
+	min-height: 100vh;
+	background: #000;
+	color: var(--fg);
+	font:
+		14px/1.5 "Inter",
+		system-ui,
+		sans-serif;
+	display: grid;
+	place-items: center;
 }
 
 #app {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-  padding: 16px;
-  align-items: center;
-  width: fit-content;
-  margin: auto;
+	width: var(--w);
+	display: grid;
+	gap: 12px;
+	padding: 24px;
 }
 
-#game {
-  display: grid;
-  grid-template-columns: 1fr 260px;
-  gap: 16px;
-  align-items: center;
-}
-
-.hidden {
-  display: none;
-}
-
-.panel {
-  width: min(520px, 90vw);
-  background: var(--panel);
-  border: 1px solid #1f2a33;
-  padding: 20px;
-  display: grid;
-  gap: 16px;
-}
-
-.panel h1,
-.panel h2 {
-  margin: 0;
-}
-
-#join-form {
-  display: grid;
-  gap: 8px;
-}
-
-#join-form input {
-  padding: 8px 10px;
-  border-radius: 6px;
-  border: 1px solid #2a3a45;
-  background: #0f141a;
-  color: var(--text);
-}
-
-#join-form button,
-#start-button {
-  padding: 10px 14px;
-  border-radius: 6px;
-  border: none;
-  background: var(--accent);
-  color: #0b1014;
-  font-weight: 700;
-  cursor: pointer;
-}
-
-#start-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.error {
-  color: var(--danger);
-  min-height: 20px;
-}
-
-.lobby-list {
-  display: grid;
-  gap: 6px;
-}
-
-.lobby-player {
-  padding: 6px 8px;
-  border: 1px solid #22313b;
-  border-radius: 6px;
-  background: #0f141a;
-}
-
-#arena {
-  position: relative;
-  width: var(--arena-width);
-  height: var(--arena-height);
-  background: linear-gradient(135deg, #0f141a 0%, #0b1014 100%);
-  border: 2px solid #1f2a33;
-  overflow: hidden;
-}
-
-#players,
-#projectiles,
-#walls {
-  position: absolute;
-  inset: 0;
-}
-
-.player {
-  position: absolute;
-  left: 0;
-  top: 0;
-  border-radius: 10px;
-  background: linear-gradient(180deg, var(--accent), #1b8f84);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
-  border: 2px solid rgba(255, 255, 255, 0.12);
-  display: grid;
-  place-items: center;
-  color: #27bee8;
-  font-weight: 700;
-  will-change: transform;
-  height: 15px;
-  width: 15px;
-}
-
-.player--self {
-  outline: 3px solid rgba(255, 255, 255, 0.2);
-  background: linear-gradient(180deg, #ffe066, #f59f00);
-}
-
-.player__label {
-  pointer-events: none;
-  font-size: 12px;
-  user-select: none;
-}
-
-#hud {
-  display: grid;
-  gap: 12px;
+header {
+	display: flex;
+	justify-content: space-between;
+	font-size: 13px;
 }
 
 #timer {
-  font-size: 24px;
-  padding: 8px 12px;
-  background: var(--panel);
-  border: 1px solid #1f2a33;
+	color: var(--mu);
+	font-variant-numeric: tabular-nums;
 }
 
-#scoreboard,
-#notifications {
-  background: var(--panel);
-  border: 1px solid #1f2a33;
-  padding: 8px 12px;
-  min-height: 120px;
+#arena {
+	position: relative;
+	width: var(--w);
+	height: var(--h);
+	border: 1px solid #161616;
+	overflow: hidden;
+}
+
+#walls,
+#players,
+#projectiles {
+	position: absolute;
+	inset: 0;
+}
+
+.player {
+	position: absolute;
+	width: 15px;
+	height: 15px;
+	background: var(--fg);
+	will-change: transform;
+}
+
+#lobby {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 16px;
+	font-size: 13px;
+}
+
+#join-form {
+	display: flex;
+	gap: 8px;
+}
+
+input,
+button {
+	background: none;
+	border: 0;
+	color: var(--fg);
+	font: inherit;
+	padding: 2px 0;
+}
+
+input {
+	border-bottom: 1px solid var(--mu);
+	outline: none;
+	width: 140px;
+}
+
+input::placeholder {
+	color: var(--mu);
+}
+
+input:focus {
+	border-color: var(--fg);
+}
+
+button {
+	cursor: pointer;
+}
+
+button:hover:not(:disabled) {
+	text-decoration: underline;
+}
+
+button:disabled {
+	color: var(--mu);
+	cursor: not-allowed;
+}
+
+#start-button {
+	margin-left: auto;
+}
+
+#lobby-players {
+	flex: 1;
+	color: var(--mu);
+}
+
+#lobby-players:empty::before {
+	content: "—";
+}
+
+.lobby-player {
+	display: inline;
+	color: var(--fg);
+}
+
+.lobby-player + .lobby-player::before {
+	content: ", ";
+	color: var(--mu);
+}
+
+#hud {
+	display: grid;
+	gap: 4px;
+	font-size: 12px;
+	color: var(--mu);
+}
+
+#join-error {
+	margin: 0;
+	color: #f56565;
+	min-height: 16px;
 }
