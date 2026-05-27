@@ -163,3 +163,9 @@ button:disabled {
   color: #f56565;
   min-height: 16px;
 }
+
+.sb-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 2px 0;
+}

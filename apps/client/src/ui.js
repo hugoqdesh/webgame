@@ -56,12 +56,11 @@ export function updateHud() {
 	lastHudKey = hudKey;
 
 	timerEl.textContent = formatTimer(localTimerMs ?? clientState.timerMs);
-	scoreboardEl.innerHTML = players
-		.map((player) => {
-			const status = player.eliminated ? "OUT" : "IN";
-			return `${player.name} | ${status} | Score: ${player.score} | Lives: ${player.lives} | HP: ${player.health}`;
-		})
-		.join("<br>");
+
+	const sorted = [...players].sort((a, b) => b.score - a.score);
+	scoreboardEl.innerHTML = sorted
+		.map((p) => `<div class="sb-row"><span>${p.name}</span><span>${p.score}</span></div>`)
+		.join("");
 
 	if (notification) {
 		notificationsEl.textContent = notification;
