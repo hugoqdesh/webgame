@@ -24,6 +24,8 @@ export const state = {
 
   winner: null,
 
+  notification: null,
+
   players: {
     player1: {
       id: "player1",

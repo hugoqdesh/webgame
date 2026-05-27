@@ -9,6 +9,7 @@ export const clientState = {
   snapshotId: null,
   timerMs: null,
   winner: null,
+  notification: null,
   lobbyPlayers: [],
   canStart: false,
   error: null,

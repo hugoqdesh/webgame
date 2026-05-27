@@ -52,6 +52,7 @@ export function connect() {
         clientState.phase = msg.phase || clientState.phase;
         clientState.timerMs = msg.timerMs ?? clientState.timerMs;
         clientState.winner = msg.winner ?? clientState.winner;
+        clientState.notification = msg.notification ?? null;
       }
     } catch {
       console.warn("Non-JSON ws message", ev.data);
