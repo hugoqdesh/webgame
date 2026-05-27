@@ -11,12 +11,12 @@ let lastSent = 0;
 let lastInput = null;
 
 function inputsEqual(a, b) {
-  return (
-    a.left === b.left &&
-    a.right === b.right &&
-    a.up === b.up &&
-    a.down === b.down
-  );
+	return (
+		a.left === b.left &&
+		a.right === b.right &&
+		a.up === b.up &&
+		a.down === b.down
+	);
 }
 
 const lobbyEl = document.getElementById("lobby");
@@ -35,99 +35,99 @@ let lastLobbyKey = null;
 let lastRenderedSnapshotId = null;
 
 function updateJoinForm() {
-  const joined = !!clientState.playerId;
-  const ready = socket.readyState === WebSocket.OPEN;
-  nameInput.disabled = joined;
-  joinSubmit.disabled = joined || !ready;
-  joinSubmit.textContent = joined ? "joined" : ready ? "join" : "…";
+	const joined = !!clientState.playerId;
+	const ready = socket.readyState === WebSocket.OPEN;
+	nameInput.disabled = joined;
+	joinSubmit.disabled = joined || !ready;
+	joinSubmit.textContent = joined ? "joined" : ready ? "join" : "…";
 }
 
 function lobbyStatusText() {
-  if (!clientState.playerId) return "";
-  if (!clientState.canStart) return "waiting for players…";
-  if (clientState.isLead) return "ready — click start";
-  return "waiting for lead to start…";
+	if (!clientState.playerId) return "";
+	if (!clientState.canStart) return "waiting for players…";
+	if (clientState.isLead) return "ready — click start";
+	return "waiting for lead to start…";
 }
 
 function updateLobbyUI() {
-  if (clientState.phase !== "lobby") {
-    lobbyEl.classList.add("hidden");
-    gameEl.classList.remove("hidden");
-  } else {
-    lobbyEl.classList.remove("hidden");
-    gameEl.classList.add("hidden");
-  }
+	if (clientState.phase !== "lobby") {
+		lobbyEl.classList.add("hidden");
+		gameEl.classList.remove("hidden");
+	} else {
+		lobbyEl.classList.remove("hidden");
+		gameEl.classList.add("hidden");
+	}
 
-  joinError.textContent = clientState.error || "";
-  lobbyStatus.textContent = lobbyStatusText();
+	joinError.textContent = clientState.error || "";
+	lobbyStatus.textContent = lobbyStatusText();
 
-  // Avoid rebuilding lobby DOM if nothing relevant changed.
-  const lobbyKey = [
-    clientState.phase,
-    clientState.canStart ? "1" : "0",
-    clientState.isLead ? "1" : "0",
-    clientState.lobbyPlayers
-      .map(
-        (player) => `${player.id}:${player.name}:${player.isLead ? "1" : "0"}`,
-      )
-      .join(","),
-  ].join("|");
+	// Avoid rebuilding lobby DOM if nothing relevant changed.
+	const lobbyKey = [
+		clientState.phase,
+		clientState.canStart ? "1" : "0",
+		clientState.isLead ? "1" : "0",
+		clientState.lobbyPlayers
+			.map(
+				(player) => `${player.id}:${player.name}:${player.isLead ? "1" : "0"}`,
+			)
+			.join(","),
+	].join("|");
 
-  if (lobbyKey === lastLobbyKey) {
-    return;
-  }
-  lastLobbyKey = lobbyKey;
+	if (lobbyKey === lastLobbyKey) {
+		return;
+	}
+	lastLobbyKey = lobbyKey;
 
-  lobbyList.innerHTML = "";
+	lobbyList.innerHTML = "";
 
-  for (const player of clientState.lobbyPlayers) {
-    const item = document.createElement("div");
-    item.className = "lobby-player";
-    item.textContent = player.isLead ? `${player.name} (lead)` : player.name;
-    lobbyList.appendChild(item);
-  }
+	for (const player of clientState.lobbyPlayers) {
+		const item = document.createElement("div");
+		item.className = "lobby-player";
+		item.textContent = player.isLead ? `${player.name} (lead)` : player.name;
+		lobbyList.appendChild(item);
+	}
 
-  startButton.hidden = !clientState.isLead;
-  startButton.disabled = !clientState.canStart;
+	startButton.hidden = !clientState.isLead;
+	startButton.disabled = !clientState.canStart;
 }
 
 joinForm.addEventListener("submit", (event) => {
-  event.preventDefault();
-  const name = nameInput.value.trim();
-  if (!name) {
-    clientState.error = "Enter a name.";
-    updateLobbyUI();
-    return;
-  }
-  if (socket.readyState === WebSocket.OPEN) {
-    // Send a single join request; server validates uniqueness and capacity.
-    socket.send(JSON.stringify({ type: "join", payload: { name } }));
-  }
+	event.preventDefault();
+	const name = nameInput.value.trim();
+	if (!name) {
+		clientState.error = "Enter a name.";
+		updateLobbyUI();
+		return;
+	}
+	if (socket.readyState === WebSocket.OPEN) {
+		// Send a single join request; server validates uniqueness and capacity.
+		socket.send(JSON.stringify({ type: "join", payload: { name } }));
+	}
 });
 
 startButton.addEventListener("click", () => {
-  if (socket.readyState === WebSocket.OPEN) {
-    // Only the lead player is allowed to start the match.
-    socket.send(JSON.stringify({ type: "start" }));
-  }
+	if (socket.readyState === WebSocket.OPEN) {
+		// Only the lead player is allowed to start the match.
+		socket.send(JSON.stringify({ type: "start" }));
+	}
 });
 
 pauseButton.addEventListener("click", () => {
-  if (socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify({ type: "pause" }));
-  }
+	if (socket.readyState === WebSocket.OPEN) {
+		socket.send(JSON.stringify({ type: "pause" }));
+	}
 });
 
 resumeButton.addEventListener("click", () => {
-  if (socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify({ type: "resume" }));
-  }
+	if (socket.readyState === WebSocket.OPEN) {
+		socket.send(JSON.stringify({ type: "resume" }));
+	}
 });
 
 quitButton.addEventListener("click", () => {
-  if (socket.readyState === WebSocket.OPEN) {
-    socket.send(JSON.stringify({ type: "quit" }));
-  }
+	if (socket.readyState === WebSocket.OPEN) {
+		socket.send(JSON.stringify({ type: "quit" }));
+	}
 });
 
 window.addEventListener("lobby:update", updateLobbyUI);
@@ -137,10 +137,10 @@ updateLobbyUI();
 updateJoinForm();
 
 nameInput.addEventListener("input", () => {
-  if (clientState.error) {
-    clientState.error = null;
-    joinError.textContent = "";
-  }
+	if (clientState.error) {
+		clientState.error = null;
+		joinError.textContent = "";
+	}
 });
 
 socket.addEventListener("open", updateJoinForm);
@@ -148,27 +148,27 @@ socket.addEventListener("close", updateJoinForm);
 window.addEventListener("lobby:update", updateJoinForm);
 
 function loop() {
-  if (clientState.phase !== "lobby") {
-    // Render only when a new snapshot arrives to reduce DOM churn.
-    if (clientState.snapshotId !== lastRenderedSnapshotId) {
-      render();
-      updateHud();
-      lastRenderedSnapshotId = clientState.snapshotId;
-    }
-  }
+	if (clientState.phase !== "lobby") {
+		// Render only when a new snapshot arrives to reduce DOM churn.
+		if (clientState.snapshotId !== lastRenderedSnapshotId) {
+			render();
+			updateHud();
+			lastRenderedSnapshotId = clientState.snapshotId;
+		}
+	}
 
-  const now = performance.now();
-  const input = getInputState();
-  if (clientState.phase === "running" && socket.readyState === WebSocket.OPEN) {
-    // Throttle input sends; only transmit on change or after a short interval.
-    if (!lastInput || !inputsEqual(lastInput, input) || now - lastSent > 100) {
-      socket.send(JSON.stringify({ type: "input", payload: input }));
-      lastSent = now;
-      lastInput = { ...input };
-    }
-  }
+	const now = performance.now();
+	const input = getInputState();
+	if (clientState.phase === "running" && socket.readyState === WebSocket.OPEN) {
+		// Throttle input sends; only transmit on change or after a short interval.
+		if (!lastInput || !inputsEqual(lastInput, input) || now - lastSent > 100) {
+			socket.send(JSON.stringify({ type: "input", payload: input }));
+			lastSent = now;
+			lastInput = { ...input };
+		}
+	}
 
-  requestAnimationFrame(loop);
+	requestAnimationFrame(loop);
 }
 
 requestAnimationFrame(loop);

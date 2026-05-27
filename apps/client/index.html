@@ -1,64 +1,64 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Arena</title>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="/styles/main.css" />
-  </head>
-  <body>
-    <main id="app">
-      <header>
-        <span>arena</span>
-        <span id="timer">00:00</span>
-      </header>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Arena</title>
+		<link
+			href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap"
+			rel="stylesheet"
+		/>
+		<link rel="stylesheet" href="/styles/main.css" />
+	</head>
+	<body>
+		<main id="app">
+			<header>
+				<span>arena</span>
+				<span id="timer"></span>
+			</header>
 
-      <div id="game">
-        <div id="arena">
-          <div id="walls"></div>
-          <div id="players"></div>
-          <div id="projectiles"></div>
-        </div>
-      </div>
+			<div id="game">
+				<div id="arena">
+					<div id="walls"></div>
+					<div id="players"></div>
+					<div id="projectiles"></div>
+				</div>
+			</div>
 
-      <div id="lobby">
-        <form id="join-form" autocomplete="off" novalidate>
-          <input
-            id="player-name"
-            name="player-name"
-            type="text"
-            placeholder="name"
-            maxlength="12"
-            autocomplete="off"
-            autocapitalize="off"
-            autocorrect="off"
-            spellcheck="false"
-            aria-label="player name"
-            aria-describedby="join-error"
-            required
-          />
-          <button type="submit">join</button>
-        </form>
-        <div id="lobby-players"></div>
-        <div id="lobby-status" aria-live="polite"></div>
-        <button id="start-button" disabled hidden>start</button>
-      </div>
+			<div id="lobby">
+				<form id="join-form" autocomplete="off" novalidate>
+					<input
+						id="player-name"
+						name="player-name"
+						type="text"
+						placeholder="name"
+						maxlength="12"
+						autocomplete="off"
+						autocapitalize="off"
+						autocorrect="off"
+						spellcheck="false"
+						aria-label="player name"
+						aria-describedby="join-error"
+						required
+					/>
+					<button type="submit">join</button>
+				</form>
+				<div id="lobby-players"></div>
+				<div id="lobby-status" aria-live="polite"></div>
+				<button id="start-button" disabled hidden>start</button>
+			</div>
 
-      <div id="hud">
-        <p id="join-error" aria-live="polite"></p>
-        <div id="controls">
-          <button id="pause-button" type="button">pause</button>
-          <button id="resume-button" type="button">resume</button>
-          <button id="quit-button" type="button">quit</button>
-        </div>
-        <div id="scoreboard"></div>
-        <div id="notifications"></div>
-      </div>
-    </main>
-    <script type="module" src="/src/main.js"></script>
-  </body>
+			<div id="hud">
+				<p id="join-error" aria-live="polite"></p>
+				<div id="controls">
+					<button id="pause-button" type="button">pause</button>
+					<button id="resume-button" type="button">resume</button>
+					<button id="quit-button" type="button">quit</button>
+				</div>
+				<div id="scoreboard"></div>
+				<div id="notifications"></div>
+			</div>
+		</main>
+		<script type="module" src="/src/main.js"></script>
+	</body>
 </html>
