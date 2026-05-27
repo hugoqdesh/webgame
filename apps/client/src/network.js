@@ -18,6 +18,7 @@ export function connect() {
         clientState.playerId = msg.playerId;
         clientState.name = msg.name || null;
         clientState.isLead = !!msg.isLead;
+        clientState.error = null;
         window.dispatchEvent(new CustomEvent("lobby:update"));
         return;
       }
@@ -28,7 +29,6 @@ export function connect() {
         if (msg.leadId && clientState.playerId) {
           clientState.isLead = msg.leadId === clientState.playerId;
         }
-        clientState.error = null;
         window.dispatchEvent(new CustomEvent("lobby:update"));
         return;
       }
