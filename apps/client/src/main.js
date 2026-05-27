@@ -28,6 +28,9 @@ const joinError = document.getElementById("join-error");
 const lobbyList = document.getElementById("lobby-players");
 const lobbyStatus = document.getElementById("lobby-status");
 const startButton = document.getElementById("start-button");
+const pauseButton = document.getElementById("pause-button");
+const resumeButton = document.getElementById("resume-button");
+const quitButton = document.getElementById("quit-button");
 let lastLobbyKey = null;
 let lastRenderedSnapshotId = null;
 
@@ -47,7 +50,7 @@ function lobbyStatusText() {
 }
 
 function updateLobbyUI() {
-  if (clientState.phase === "running") {
+  if (clientState.phase !== "lobby") {
     lobbyEl.classList.add("hidden");
     gameEl.classList.remove("hidden");
   } else {
@@ -109,6 +112,24 @@ startButton.addEventListener("click", () => {
   }
 });
 
+pauseButton.addEventListener("click", () => {
+  if (socket.readyState === WebSocket.OPEN) {
+    socket.send(JSON.stringify({ type: "pause" }));
+  }
+});
+
+resumeButton.addEventListener("click", () => {
+  if (socket.readyState === WebSocket.OPEN) {
+    socket.send(JSON.stringify({ type: "resume" }));
+  }
+});
+
+quitButton.addEventListener("click", () => {
+  if (socket.readyState === WebSocket.OPEN) {
+    socket.send(JSON.stringify({ type: "quit" }));
+  }
+});
+
 window.addEventListener("lobby:update", updateLobbyUI);
 window.addEventListener("phase:update", updateLobbyUI);
 
@@ -127,15 +148,13 @@ socket.addEventListener("close", updateJoinForm);
 window.addEventListener("lobby:update", updateJoinForm);
 
 function loop() {
-  if (clientState.phase === "running") {
+  if (clientState.phase !== "lobby") {
     // Render only when a new snapshot arrives to reduce DOM churn.
     if (clientState.snapshotId !== lastRenderedSnapshotId) {
       render();
       updateHud();
       lastRenderedSnapshotId = clientState.snapshotId;
     }
-  } else if (clientState.phase === "ended") {
-    updateHud();
   }
 
   const now = performance.now();

@@ -19,10 +19,12 @@ export function updateHud() {
     (player) => player && player.active,
   );
   const winner = clientState.winner;
+  const notification = clientState.notification;
   const hudKey = [
     clientState.phase,
     clientState.timerMs,
     winner ? `${winner.id}:${winner.score}` : "",
+    notification || "",
     players
       .map(
         (player) =>
@@ -44,7 +46,9 @@ export function updateHud() {
     })
     .join("<br>");
 
-  if (clientState.phase === "ended" && winner) {
+  if (notification) {
+    notificationsEl.textContent = notification;
+  } else if (clientState.phase === "ended" && winner) {
     notificationsEl.textContent = `Winner: ${winner.name} (${winner.score})`;
   } else if (clientState.phase === "ended") {
     notificationsEl.textContent = "Game ended";

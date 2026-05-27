@@ -44,6 +44,7 @@ function buildSnapshot(snapshotId, ts) {
     phase: state.phase,
     timerMs: remainingMs,
     winner: state.winner,
+    notification: state.notification,
     players,
   };
 }
@@ -67,6 +68,11 @@ function getTimerRemainingMs(now) {
   }
   if (state.phase === "ended") {
     return 0;
+  }
+  if (state.phase === "paused" && state.timer.pausedAt) {
+    const pausedElapsed =
+      state.timer.pausedAt - state.timer.startedAt - state.timer.pausedTotalMs;
+    return Math.max(0, state.timer.durationMs - pausedElapsed);
   }
   const startedAt = state.timer.startedAt;
   if (!startedAt) {
@@ -108,6 +114,43 @@ export function createSimulation(onSnapshot) {
   let snapshotId = 0;
   let snapshotDirty = true;
   let lastTimerSecond = null;
+
+  function handlePlayerDeparture(playerId, reason) {
+    // Centralize disconnect/quit handling so snapshots stay consistent.
+    const player = state.players[playerId];
+    if (!player || !player.active) {
+      return { error: "Player not active" };
+    }
+
+    const playerName = player.name || "Player";
+    player.active = false;
+    player.name = null;
+    player.isLead = false;
+    resetPlayer(player);
+    ensureLead();
+
+    if (reason === "quit") {
+      state.notification = `${playerName} quit the game`;
+    } else if (reason === "disconnect") {
+      state.notification = `${playerName} disconnected`;
+    }
+
+    const activePlayers = getActivePlayers();
+    // If too few players remain mid-game, end safely and pick a winner.
+    if (
+      (state.phase === "running" || state.phase === "paused") &&
+      activePlayers.length < 2
+    ) {
+      state.phase = "ended";
+      state.winner = selectWinner();
+      if (!state.winner) {
+        state.notification = "Game ended";
+      }
+    }
+
+    snapshotDirty = true;
+    return { phase: state.phase };
+  }
 
   function updatePlayers() {
     // Server-authoritative movement: clients send intent only.
@@ -155,6 +198,7 @@ export function createSimulation(onSnapshot) {
         if (remainingMs <= 0) {
           state.phase = "ended";
           state.winner = selectWinner();
+          state.notification = "Game ended";
           snapshotDirty = true;
         }
       }
@@ -226,13 +270,45 @@ export function createSimulation(onSnapshot) {
       return { error: "Room full" };
     },
     removePlayer(playerId) {
-      const player = state.players[playerId];
-      if (!player) return;
-      player.active = false;
-      player.name = null;
-      player.isLead = false;
-      resetPlayer(player);
-      ensureLead();
+      // Disconnects can happen anytime; treat them like a safe quit.
+      handlePlayerDeparture(playerId, "disconnect");
+    },
+    pauseGame(requesterId) {
+      if (state.phase !== "running") {
+        return { error: "Game is not running" };
+      }
+      const requester = state.players[requesterId];
+      if (!requester || !requester.active) {
+        return { error: "Player not active" };
+      }
+      state.phase = "paused";
+      state.timer.pausedAt = Date.now();
+      state.notification = `${requester.name} paused the game`;
+      snapshotDirty = true;
+      return { paused: true };
+    },
+    resumeGame(requesterId) {
+      if (state.phase !== "paused") {
+        return { error: "Game is not paused" };
+      }
+      const requester = state.players[requesterId];
+      if (!requester || !requester.active) {
+        return { error: "Player not active" };
+      }
+      if (state.timer.pausedAt) {
+        state.timer.pausedTotalMs += Date.now() - state.timer.pausedAt;
+        state.timer.pausedAt = null;
+      }
+      state.phase = "running";
+      state.notification = `${requester.name} resumed the game`;
+      snapshotDirty = true;
+      return { resumed: true };
+    },
+    quitPlayer(requesterId) {
+      // Explicit quit uses the same cleanup path as disconnects.
+      const result = handlePlayerDeparture(requesterId, "quit");
+      if (result.error) return result;
+      return { quit: true, phase: result.phase };
     },
     startGame(requesterId) {
       // Only lead player can start; this prevents race conditions.
@@ -254,6 +330,7 @@ export function createSimulation(onSnapshot) {
       state.timer.pausedAt = null;
       state.timer.pausedTotalMs = 0;
       state.winner = null;
+      state.notification = null;
       lastTimerSecond = null;
       snapshotDirty = true;
       return { started: true };
