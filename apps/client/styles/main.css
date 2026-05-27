@@ -57,7 +57,13 @@ header {
   height: 15px;
   background: var(--fg);
   will-change: transform;
+  border-radius: 50%;
 }
+
+.player:nth-child(1) { background: #5b9bd5; }
+.player:nth-child(2) { background: #e06c75; }
+.player:nth-child(3) { background: #98c379; }
+.player:nth-child(4) { background: #d19a66; }
 
 .hp-bar {
   position: absolute;
