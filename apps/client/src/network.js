@@ -49,6 +49,9 @@ export function connect() {
         }
         clientState.snapshotId = msg.snapshotId ?? clientState.snapshotId;
         clientState.players = msg.players;
+        clientState.phase = msg.phase || clientState.phase;
+        clientState.timerMs = msg.timerMs ?? clientState.timerMs;
+        clientState.winner = msg.winner ?? clientState.winner;
       }
     } catch {
       console.warn("Non-JSON ws message", ev.data);

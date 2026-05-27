@@ -7,6 +7,8 @@ export const clientState = {
   phase: "lobby",
   players: {},
   snapshotId: null,
+  timerMs: null,
+  winner: null,
   lobbyPlayers: [],
   canStart: false,
   error: null,

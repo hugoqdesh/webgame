@@ -2,6 +2,7 @@ import { connect } from "./network.js";
 import { initInput, getInputState } from "./input.js";
 import { render } from "./renderer.js";
 import { clientState } from "./state.js";
+import { updateHud } from "./ui.js";
 
 const socket = connect();
 initInput();
@@ -100,8 +101,11 @@ function loop() {
     // Render only when a new snapshot arrives to reduce DOM churn.
     if (clientState.snapshotId !== lastRenderedSnapshotId) {
       render();
+      updateHud();
       lastRenderedSnapshotId = clientState.snapshotId;
     }
+  } else if (clientState.phase === "ended") {
+    updateHud();
   }
 
   const now = performance.now();

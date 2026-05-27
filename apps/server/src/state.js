@@ -11,7 +11,7 @@ export const state = {
 
   projectiles: [],
 
-  // Timer fields are reserved for later phases; not used in current flow.
+  // Timer is server-owned so all clients see the same countdown.
   timer: {
     durationMs: 180000,
     startedAt: null,
@@ -22,6 +22,8 @@ export const state = {
   // Phase gates simulation and input processing.
   phase: "lobby",
 
+  winner: null,
+
   players: {
     player1: {
       id: "player1",
@@ -29,6 +31,9 @@ export const state = {
       isLead: false,
       active: false,
       health: 100,
+      lives: 3,
+      score: 0,
+      eliminated: false,
       size: PLAYER_SIZE,
       x: 120,
       y: 120,
@@ -46,6 +51,9 @@ export const state = {
       isLead: false,
       active: false,
       health: 100,
+      lives: 3,
+      score: 0,
+      eliminated: false,
       size: PLAYER_SIZE,
       x: 748,
       y: 120,
@@ -63,6 +71,9 @@ export const state = {
       isLead: false,
       active: false,
       health: 100,
+      lives: 3,
+      score: 0,
+      eliminated: false,
       size: PLAYER_SIZE,
       x: 120,
       y: 448,
@@ -80,6 +91,9 @@ export const state = {
       isLead: false,
       active: false,
       health: 100,
+      lives: 3,
+      score: 0,
+      eliminated: false,
       size: PLAYER_SIZE,
       x: 748,
       y: 448,

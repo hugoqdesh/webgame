@@ -4,6 +4,8 @@ import { state } from "./state.js";
 const PLAYER_SPEED = 3;
 const NAME_MAX = 12;
 const NAME_MIN = 1;
+const DEFAULT_LIVES = 3;
+const DEFAULT_HEALTH = 100;
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
@@ -26,14 +28,22 @@ function buildSnapshot(snapshotId, ts) {
       size: player.size,
       active: player.active,
       name: player.name,
+      health: player.health,
+      lives: player.lives,
+      score: player.score,
+      eliminated: player.eliminated,
     };
   }
+
+  const remainingMs = getTimerRemainingMs(ts);
 
   return {
     type: "snapshot",
     snapshotId,
     ts,
     phase: state.phase,
+    timerMs: remainingMs,
+    winner: state.winner,
     players,
   };
 }
@@ -51,11 +61,53 @@ function ensureLead() {
   return activePlayers[0].id;
 }
 
+function getTimerRemainingMs(now) {
+  if (state.phase === "lobby") {
+    return state.timer.durationMs;
+  }
+  if (state.phase === "ended") {
+    return 0;
+  }
+  const startedAt = state.timer.startedAt;
+  if (!startedAt) {
+    return state.timer.durationMs;
+  }
+  const pausedTotal = state.timer.pausedTotalMs;
+  const elapsed = now - startedAt - pausedTotal;
+  const remaining = state.timer.durationMs - elapsed;
+  return Math.max(0, remaining);
+}
+
+function resetPlayer(player) {
+  player.health = DEFAULT_HEALTH;
+  player.lives = DEFAULT_LIVES;
+  player.score = 0;
+  player.eliminated = false;
+  player.input = { left: false, right: false, up: false, down: false };
+}
+
+function selectWinner() {
+  const activePlayers = getActivePlayers();
+  if (activePlayers.length === 0) return null;
+  let best = activePlayers[0];
+  for (const player of activePlayers) {
+    if (player.score > best.score) {
+      best = player;
+    }
+  }
+  return {
+    id: best.id,
+    name: best.name,
+    score: best.score,
+  };
+}
+
 export function createSimulation(onSnapshot) {
   let lastTick = Date.now();
   let lastSnapshotAt = 0;
   let snapshotId = 0;
   let snapshotDirty = true;
+  let lastTimerSecond = null;
 
   function updatePlayers() {
     // Server-authoritative movement: clients send intent only.
@@ -93,11 +145,20 @@ export function createSimulation(onSnapshot) {
       if (updatePlayers()) {
         snapshotDirty = true;
       }
-      if (
-        state.phase === "running" &&
-        snapshotDirty &&
-        now - lastSnapshotAt >= SERVER_CONFIG.snapshotMs
-      ) {
+      if (state.phase === "running") {
+        const remainingMs = getTimerRemainingMs(now);
+        const remainingSeconds = Math.ceil(remainingMs / 1000);
+        if (remainingSeconds !== lastTimerSecond) {
+          lastTimerSecond = remainingSeconds;
+          snapshotDirty = true;
+        }
+        if (remainingMs <= 0) {
+          state.phase = "ended";
+          state.winner = selectWinner();
+          snapshotDirty = true;
+        }
+      }
+      if (snapshotDirty && now - lastSnapshotAt >= SERVER_CONFIG.snapshotMs) {
         // Throttle snapshots to avoid redundant bandwidth and client work.
         snapshotId += 1;
         onSnapshot(buildSnapshot(snapshotId, now));
@@ -152,7 +213,7 @@ export function createSimulation(onSnapshot) {
           player.active = true;
           player.name = normalized;
           player.isLead = false;
-          player.input = { left: false, right: false, up: false, down: false };
+          resetPlayer(player);
           const leadId = ensureLead();
           return {
             playerId: player.id,
@@ -170,7 +231,7 @@ export function createSimulation(onSnapshot) {
       player.active = false;
       player.name = null;
       player.isLead = false;
-      player.input = { left: false, right: false, up: false, down: false };
+      resetPlayer(player);
       ensureLead();
     },
     startGame(requesterId) {
@@ -189,6 +250,11 @@ export function createSimulation(onSnapshot) {
       }
 
       state.phase = "running";
+      state.timer.startedAt = Date.now();
+      state.timer.pausedAt = null;
+      state.timer.pausedTotalMs = 0;
+      state.winner = null;
+      lastTimerSecond = null;
       snapshotDirty = true;
       return { started: true };
     },
