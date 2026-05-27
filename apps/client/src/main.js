@@ -130,6 +130,22 @@ quitButton.addEventListener("click", () => {
 	}
 });
 
+document.getElementById("overlay-resume").addEventListener("click", () => {
+	if (socket.readyState === WebSocket.OPEN) {
+		socket.send(JSON.stringify({ type: "resume" }));
+	}
+});
+
+document.getElementById("overlay-quit").addEventListener("click", () => {
+	if (socket.readyState === WebSocket.OPEN) {
+		socket.send(JSON.stringify({ type: "quit" }));
+	}
+});
+
+document.getElementById("play-again").addEventListener("click", () => {
+	location.reload();
+});
+
 window.addEventListener("lobby:update", updateLobbyUI);
 window.addEventListener("phase:update", updateLobbyUI);
 

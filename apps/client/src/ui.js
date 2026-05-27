@@ -3,6 +3,12 @@ import { clientState } from "./state.js";
 const timerEl = document.getElementById("timer");
 const scoreboardEl = document.getElementById("scoreboard");
 const notificationsEl = document.getElementById("notifications");
+const pauseOverlay = document.getElementById("pause-overlay");
+const pauseMsg = document.getElementById("pause-msg");
+const winnerOverlay = document.getElementById("winner-overlay");
+const winnerMsg = document.getElementById("winner-msg");
+const finalScores = document.getElementById("final-scores");
+const notifBar = document.getElementById("notif-bar");
 
 let lastHudKey = null;
 let localTimerMs = null;
@@ -64,11 +70,28 @@ export function updateHud() {
 
 	if (notification) {
 		notificationsEl.textContent = notification;
+		notifBar.textContent = notification;
 	} else if (clientState.phase === "ended" && winner) {
 		notificationsEl.textContent = `Winner: ${winner.name} (${winner.score})`;
 	} else if (clientState.phase === "ended") {
 		notificationsEl.textContent = "Game ended";
 	} else {
 		notificationsEl.textContent = "";
+	}
+
+	if (clientState.phase === "paused") {
+		pauseOverlay.hidden = false;
+		pauseMsg.textContent = notification || "Paused";
+	} else {
+		pauseOverlay.hidden = true;
+	}
+
+	if (clientState.phase === "ended") {
+		winnerOverlay.hidden = false;
+		winnerMsg.textContent = winner ? `${winner.name} wins!` : "Game ended";
+		const sorted = [...players].sort((a, b) => b.score - a.score);
+		finalScores.innerHTML = sorted.map((p) => `${p.name}: ${p.score}`).join("<br>");
+	} else {
+		winnerOverlay.hidden = true;
 	}
 }

@@ -22,7 +22,18 @@
 					<div id="walls"></div>
 					<div id="players"></div>
 					<div id="projectiles"></div>
+					<div id="pause-overlay" class="overlay" hidden>
+						<p id="pause-msg">Paused</p>
+						<button id="overlay-resume" type="button">resume</button>
+						<button id="overlay-quit" type="button">quit</button>
+					</div>
+					<div id="winner-overlay" class="overlay" hidden>
+						<p id="winner-msg"></p>
+						<div id="final-scores"></div>
+						<button id="play-again" type="button">play again</button>
+					</div>
 				</div>
+				<div id="notif-bar" aria-live="polite"></div>
 			</div>
 
 			<div id="lobby">

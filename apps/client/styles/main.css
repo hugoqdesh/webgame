@@ -202,3 +202,50 @@ button:disabled {
   justify-content: space-between;
   padding: 2px 0;
 }
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(2px);
+}
+
+.overlay[hidden] {
+  display: none;
+}
+
+.overlay p {
+  margin: 0;
+  font-size: 18px;
+  color: var(--fg);
+}
+
+.overlay button {
+  padding: 4px 12px;
+  border: 1px solid var(--mu);
+}
+
+.overlay button:hover {
+  border-color: var(--fg);
+}
+
+#final-scores {
+  font-size: 12px;
+  color: var(--mu);
+  text-align: center;
+}
+
+#notif-bar {
+  height: 20px;
+  font-size: 11px;
+  color: var(--mu);
+  padding: 2px 4px;
+  overflow: hidden;
+  white-space: nowrap;
+}
