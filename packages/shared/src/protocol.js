@@ -3,6 +3,7 @@ export const MessageType = {
 	WELCOME: "welcome",
 	INPUT: "input",
 	SHOOT: "shoot",
+	RESTART: "restart",
 	SNAPSHOT: "snapshot",
 	EVENT: "event",
 };

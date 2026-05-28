@@ -8,6 +8,12 @@ const NAME_MIN = 1;
 const DEFAULT_LIVES = 5;
 const DEFAULT_HEALTH = 100;
 const PROJECTILE_TTL_MS = 1500;
+const PLAYER_SPAWNS = {
+  player1: { x: 120, y: 120 },
+  player2: { x: 748, y: 120 },
+  player3: { x: 120, y: 448 },
+  player4: { x: 748, y: 448 },
+};
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
@@ -100,7 +106,14 @@ function getTimerRemainingMs(now) {
   return Math.max(0, remaining);
 }
 
-function resetPlayer(player) {
+function resetPlayer(player, options = {}) {
+  if (options.resetPosition) {
+    const spawn = PLAYER_SPAWNS[player.id];
+    if (spawn) {
+      player.x = spawn.x;
+      player.y = spawn.y;
+    }
+  }
   player.health = DEFAULT_HEALTH;
   player.lives = DEFAULT_LIVES;
   player.score = 0;
@@ -144,6 +157,32 @@ export function createSimulation(onSnapshot) {
   let lastTimerSecond = null;
   let nextProjectileId = 1;
 
+  function canPlayRound() {
+    const activePlayers = getActivePlayers();
+    return (
+      // currently starts with 1 player for testing simplicity.
+      activePlayers.length >= 1 &&
+      activePlayers.length <= GAME_CONFIG.maxPlayers
+    );
+  }
+
+  function resetRound(now) {
+    // A round reset is server-owned so clients cannot preserve stale combat state.
+    for (const player of getActivePlayers()) {
+      resetPlayer(player, { resetPosition: true });
+    }
+    state.timer.startedAt = now;
+    state.timer.pausedAt = null;
+    state.timer.pausedTotalMs = 0;
+    state.projectiles = [];
+    state.winner = null;
+    state.notification = null;
+    state.phase = "running";
+    lastTimerSecond = null;
+    nextProjectileId = 1;
+    snapshotDirty = true;
+  }
+
   function endGame(notification = "Game ended") {
     state.phase = "ended";
     state.winner = selectWinner();
@@ -163,7 +202,7 @@ export function createSimulation(onSnapshot) {
     player.active = false;
     player.name = null;
     player.isLead = false;
-    resetPlayer(player);
+    resetPlayer(player, { resetPosition: true });
     removeProjectilesOwnedBy(playerId);
     ensureLead();
 
@@ -301,8 +340,7 @@ export function createSimulation(onSnapshot) {
       return {
         type: "lobby",
         phase: state.phase,
-        //currently starts with 1 player for testing simplicity.
-        canStart: activePlayers.length >= 1,
+        canStart: canPlayRound(),
         leadId,
         players: activePlayers.map((player) => ({
           id: player.id,
@@ -323,6 +361,10 @@ export function createSimulation(onSnapshot) {
       }
 
       const activePlayers = getActivePlayers();
+      if (activePlayers.length >= GAME_CONFIG.maxPlayers) {
+        return { error: "Room full" };
+      }
+
       const duplicate = activePlayers.find(
         (player) =>
           player.name && player.name.toLowerCase() === normalized.toLowerCase(),
@@ -337,7 +379,7 @@ export function createSimulation(onSnapshot) {
           player.active = true;
           player.name = normalized;
           player.isLead = false;
-          resetPlayer(player);
+          resetPlayer(player, { resetPosition: true });
           const leadId = ensureLead();
           return {
             playerId: player.id,
@@ -405,20 +447,36 @@ export function createSimulation(onSnapshot) {
       }
 
       const activePlayers = getActivePlayers();
-      if (activePlayers.length < 1) {
-        return { error: "Need at least 2 players" };
+      if (
+        activePlayers.length < 1 ||
+        activePlayers.length > GAME_CONFIG.maxPlayers
+      ) {
+        return { error: "Need 1-4 players" };
       }
 
-      state.phase = "running";
-      state.timer.startedAt = Date.now();
-      state.timer.pausedAt = null;
-      state.timer.pausedTotalMs = 0;
-      state.projectiles = [];
-      state.winner = null;
-      state.notification = null;
-      lastTimerSecond = null;
-      snapshotDirty = true;
+      resetRound(Date.now());
       return { started: true };
+    },
+    restartGame(requesterId) {
+      // Restart is intentionally limited to ended games and the current lead.
+      if (state.phase !== "ended") {
+        return { error: "Game has not ended" };
+      }
+      const requester = state.players[requesterId];
+      if (!requester || !requester.active || !requester.isLead) {
+        return { error: "Only the lead player can restart" };
+      }
+
+      const activePlayers = getActivePlayers();
+      if (
+        activePlayers.length < 1 ||
+        activePlayers.length > GAME_CONFIG.maxPlayers
+      ) {
+        return { error: "Need 1-4 players to restart" };
+      }
+
+      resetRound(Date.now());
+      return { restarted: true };
     },
     queueInput(playerId, input) {
       // Inputs are accepted only while running to keep simulation deterministic.

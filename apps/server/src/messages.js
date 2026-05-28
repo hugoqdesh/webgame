@@ -1,3 +1,14 @@
+const MESSAGE_TYPES = new Set([
+  "join",
+  "start",
+  "pause",
+  "resume",
+  "quit",
+  "input",
+  "shoot",
+  "restart",
+]);
+
 export function handleMessage({
   socket,
   data,
@@ -13,6 +24,10 @@ export function handleMessage({
   }
 
   if (!message || typeof message !== "object" || typeof message.type !== "string") {
+    return;
+  }
+  // Drop unknown commands at the boundary so only supported server actions run.
+  if (!MESSAGE_TYPES.has(message.type)) {
     return;
   }
 
@@ -115,6 +130,19 @@ export function handleMessage({
         const client = clients.get(socket);
         if (!client || !client.id) return;
         simulation.queueInput(client.id, payload);
+      }
+      break;
+    case "restart":
+      {
+        // Restart is only a request; the server verifies phase, lead, and capacity.
+        const client = clients.get(socket);
+        if (!client || !client.id) return;
+        const result = simulation.restartGame(client.id);
+        if (result.error) {
+          socket.send(JSON.stringify({ type: "error", message: result.error }));
+          return;
+        }
+        broadcast(JSON.stringify({ type: "phase", phase: "running" }));
       }
       break;
     case "shoot":
