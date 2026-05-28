@@ -222,7 +222,8 @@ export function createSimulation(onSnapshot) {
       return {
         type: "lobby",
         phase: state.phase,
-        canStart: activePlayers.length >= 2,
+        //currently starts with 1 player for testing simplicity.
+        canStart: activePlayers.length >= 1,
         leadId,
         players: activePlayers.map((player) => ({
           id: player.id,
@@ -321,7 +322,7 @@ export function createSimulation(onSnapshot) {
       }
 
       const activePlayers = getActivePlayers();
-      if (activePlayers.length < 2) {
+      if (activePlayers.length < 1) {
         return { error: "Need at least 2 players" };
       }
 
