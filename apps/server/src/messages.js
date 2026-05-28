@@ -12,6 +12,17 @@ export function handleMessage({
     return;
   }
 
+  if (!message || typeof message !== "object" || typeof message.type !== "string") {
+    return;
+  }
+
+  const payload =
+    message.payload &&
+    typeof message.payload === "object" &&
+    !Array.isArray(message.payload)
+      ? message.payload
+      : {};
+
   switch (message.type) {
     case "join":
       {
@@ -25,7 +36,7 @@ export function handleMessage({
           return;
         }
 
-        const name = message.payload?.name;
+        const name = payload.name;
         const result = simulation.assignPlayer(name);
         if (result.error) {
           socket.send(JSON.stringify({ type: "error", message: result.error }));
@@ -103,7 +114,7 @@ export function handleMessage({
         // Inputs are mapped to a player id; clients do not move themselves.
         const client = clients.get(socket);
         if (!client || !client.id) return;
-        simulation.queueInput(client.id, message.payload || {});
+        simulation.queueInput(client.id, payload);
       }
       break;
     case "shoot":
@@ -111,7 +122,7 @@ export function handleMessage({
         // Shooting is an action request; projectile creation remains server-owned.
         const client = clients.get(socket);
         if (!client || !client.id) return;
-        simulation.shoot(client.id, message.payload || {});
+        simulation.shoot(client.id, payload);
       }
       break;
     default:

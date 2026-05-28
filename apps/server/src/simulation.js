@@ -38,13 +38,15 @@ function buildSnapshot(snapshotId, ts) {
   }
 
   const remainingMs = getTimerRemainingMs(ts);
-  const projectiles = state.projectiles.map((projectile) => ({
-    id: projectile.id,
-    ownerId: projectile.ownerId,
-    x: projectile.x,
-    y: projectile.y,
-    size: projectile.size,
-  }));
+  const projectiles = state.projectiles
+    .filter((projectile) => state.players[projectile.ownerId]?.active)
+    .map((projectile) => ({
+      id: projectile.id,
+      ownerId: projectile.ownerId,
+      x: projectile.x,
+      y: projectile.y,
+      size: projectile.size,
+    }));
 
   return {
     type: "snapshot",
@@ -61,6 +63,10 @@ function buildSnapshot(snapshotId, ts) {
 
 function getActivePlayers() {
   return Object.values(state.players).filter((player) => player.active);
+}
+
+function getActiveCombatants() {
+  return getActivePlayers().filter((player) => !player.eliminated);
 }
 
 function ensureLead() {
@@ -99,12 +105,23 @@ function resetPlayer(player) {
   player.lives = DEFAULT_LIVES;
   player.score = 0;
   player.eliminated = false;
+  player.aimX = player.x < state.world.width / 2 ? 1 : -1;
+  player.aimY = 0;
   player.lastShotAt = 0;
   player.input = { left: false, right: false, up: false, down: false };
 }
 
+function removeProjectilesOwnedBy(playerId) {
+  const previousCount = state.projectiles.length;
+  state.projectiles = state.projectiles.filter(
+    (projectile) => projectile.ownerId !== playerId,
+  );
+  return state.projectiles.length !== previousCount;
+}
+
 function selectWinner() {
-  const activePlayers = getActivePlayers();
+  const candidates = getActiveCombatants();
+  const activePlayers = candidates.length > 0 ? candidates : getActivePlayers();
   if (activePlayers.length === 0) return null;
   let best = activePlayers[0];
   for (const player of activePlayers) {
@@ -127,6 +144,14 @@ export function createSimulation(onSnapshot) {
   let lastTimerSecond = null;
   let nextProjectileId = 1;
 
+  function endGame(notification = "Game ended") {
+    state.phase = "ended";
+    state.winner = selectWinner();
+    state.notification = notification;
+    state.projectiles = [];
+    snapshotDirty = true;
+  }
+
   function handlePlayerDeparture(playerId, reason) {
     // Centralize disconnect/quit handling so snapshots stay consistent.
     const player = state.players[playerId];
@@ -139,6 +164,7 @@ export function createSimulation(onSnapshot) {
     player.name = null;
     player.isLead = false;
     resetPlayer(player);
+    removeProjectilesOwnedBy(playerId);
     ensureLead();
 
     if (reason === "quit") {
@@ -147,17 +173,13 @@ export function createSimulation(onSnapshot) {
       state.notification = `${playerName} disconnected`;
     }
 
-    const activePlayers = getActivePlayers();
+    const activePlayers = getActiveCombatants();
     // If too few players remain mid-game, end safely and pick a winner.
     if (
       (state.phase === "running" || state.phase === "paused") &&
       activePlayers.length < 2
     ) {
-      state.phase = "ended";
-      state.winner = selectWinner();
-      if (!state.winner) {
-        state.notification = "Game ended";
-      }
+      endGame(state.notification || "Game ended");
     }
 
     snapshotDirty = true;
@@ -170,7 +192,7 @@ export function createSimulation(onSnapshot) {
     let moved = false;
     for (const id in state.players) {
       const player = state.players[id];
-      if (!player.active) continue;
+      if (!player.active || player.eliminated) continue;
 
       const input = player.input;
       let dx = 0;
@@ -204,6 +226,11 @@ export function createSimulation(onSnapshot) {
     let changed = false;
     const activeProjectiles = [];
     for (const projectile of state.projectiles) {
+      if (!state.players[projectile.ownerId]?.active) {
+        changed = true;
+        continue;
+      }
+
       projectile.x += projectile.vx;
       projectile.y += projectile.vy;
 
@@ -242,15 +269,16 @@ export function createSimulation(onSnapshot) {
       if (state.phase === "running") {
         const remainingMs = getTimerRemainingMs(now);
         const remainingSeconds = Math.ceil(remainingMs / 1000);
+        const activeCombatants = getActiveCombatants();
+        if (activeCombatants.length < 2) {
+          endGame("Game ended");
+        }
         if (remainingSeconds !== lastTimerSecond) {
           lastTimerSecond = remainingSeconds;
           snapshotDirty = true;
         }
         if (remainingMs <= 0) {
-          state.phase = "ended";
-          state.winner = selectWinner();
-          state.notification = "Game ended";
-          snapshotDirty = true;
+          endGame("Game ended");
         }
       }
       if (snapshotDirty && now - lastSnapshotAt >= SERVER_CONFIG.snapshotMs) {
@@ -330,7 +358,7 @@ export function createSimulation(onSnapshot) {
         return { error: "Game is not running" };
       }
       const requester = state.players[requesterId];
-      if (!requester || !requester.active) {
+      if (!requester || !requester.active || requester.eliminated) {
         return { error: "Player not active" };
       }
       state.phase = "paused";
@@ -344,12 +372,16 @@ export function createSimulation(onSnapshot) {
         return { error: "Game is not paused" };
       }
       const requester = state.players[requesterId];
-      if (!requester || !requester.active) {
+      if (!requester || !requester.active || requester.eliminated) {
         return { error: "Player not active" };
       }
       if (state.timer.pausedAt) {
-        state.timer.pausedTotalMs += Date.now() - state.timer.pausedAt;
+        const pausedMs = Date.now() - state.timer.pausedAt;
+        state.timer.pausedTotalMs += pausedMs;
         state.timer.pausedAt = null;
+        for (const projectile of state.projectiles) {
+          projectile.createdAt += pausedMs;
+        }
       }
       state.phase = "running";
       state.notification = `${requester.name} resumed the game`;
@@ -392,7 +424,7 @@ export function createSimulation(onSnapshot) {
       // Inputs are accepted only while running to keep simulation deterministic.
       if (state.phase !== "running") return;
       const player = state.players[playerId];
-      if (!player || !player.active) return;
+      if (!player || !player.active || player.eliminated) return;
       player.input = {
         left: !!input.left,
         right: !!input.right,
@@ -410,9 +442,16 @@ export function createSimulation(onSnapshot) {
 
       const requestedX = Number(payload.directionX);
       const requestedY = Number(payload.directionY);
-      let directionX = Number.isFinite(requestedX) ? requestedX : player.aimX;
-      let directionY = Number.isFinite(requestedY) ? requestedY : player.aimY;
-      const length = Math.hypot(directionX, directionY) || 1;
+      let directionX = player.aimX;
+      let directionY = player.aimY;
+      if (Number.isFinite(requestedX) && Number.isFinite(requestedY)) {
+        const requestedLength = Math.hypot(requestedX, requestedY);
+        if (requestedLength <= 0 || requestedLength > 100) return;
+        directionX = requestedX;
+        directionY = requestedY;
+      }
+      const length = Math.hypot(directionX, directionY);
+      if (length <= 0) return;
       directionX /= length;
       directionY /= length;
 
