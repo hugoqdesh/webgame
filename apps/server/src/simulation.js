@@ -1,10 +1,10 @@
 import { SERVER_CONFIG } from "./constants.js";
 import { state } from "./state.js";
 
-const PLAYER_SPEED = 3;
+const PLAYER_SPEED = 15;
 const NAME_MAX = 12;
 const NAME_MIN = 1;
-const DEFAULT_LIVES = 3;
+const DEFAULT_LIVES = 5;
 const DEFAULT_HEALTH = 100;
 
 function clamp(value, min, max) {
