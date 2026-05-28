@@ -16,6 +16,9 @@ export function render() {
 			let playerElement = document.createElement("div");
 			playerElement.id = player.id;
 			playerElement.classList.add("player");
+			if (player.id === clientState.playerId) {
+				playerElement.classList.add("player--self");
+			}
 			if (player.size) {
 				playerElement.style.width = `${player.size}px`;
 				playerElement.style.height = `${player.size}px`;
