@@ -106,6 +106,14 @@ export function handleMessage({
         simulation.queueInput(client.id, message.payload || {});
       }
       break;
+    case "shoot":
+      {
+        // Shooting is an action request; projectile creation remains server-owned.
+        const client = clients.get(socket);
+        if (!client || !client.id) return;
+        simulation.shoot(client.id, message.payload || {});
+      }
+      break;
     default:
       break;
   }

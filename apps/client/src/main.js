@@ -1,5 +1,5 @@
 import { connect } from "./network.js";
-import { initInput, getInputState } from "./input.js";
+import { initInput, getInputState, consumeShootAction } from "./input.js";
 import { render } from "./renderer.js";
 import { clientState } from "./state.js";
 import { updateHud } from "./ui.js";
@@ -175,12 +175,16 @@ function loop() {
 
 	const now = performance.now();
 	const input = getInputState();
+	const shootAction = consumeShootAction();
 	if (clientState.phase === "running" && socket.readyState === WebSocket.OPEN) {
 		// Throttle input sends; only transmit on change or after a short interval.
 		if (!lastInput || !inputsEqual(lastInput, input) || now - lastSent > 100) {
 			socket.send(JSON.stringify({ type: "input", payload: input }));
 			lastSent = now;
 			lastInput = { ...input };
+		}
+		if (shootAction) {
+			socket.send(JSON.stringify({ type: "shoot", payload: shootAction }));
 		}
 	}
 

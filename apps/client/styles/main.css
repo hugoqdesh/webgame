@@ -70,6 +70,16 @@ header {
   outline-offset: 2px;
 }
 
+.projectile {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  background: #f5d76e;
+  border-radius: 50%;
+  box-shadow: 0 0 8px rgba(245, 215, 110, 0.8);
+  will-change: transform;
+}
+
 .hp-bar {
   position: absolute;
   bottom: 100%;

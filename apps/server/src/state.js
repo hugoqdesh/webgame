@@ -39,6 +39,9 @@ export const state = {
       size: PLAYER_SIZE,
       x: 120,
       y: 120,
+      aimX: 1,
+      aimY: 0,
+      lastShotAt: 0,
       input: {
         left: false,
         right: false,
@@ -59,6 +62,9 @@ export const state = {
       size: PLAYER_SIZE,
       x: 748,
       y: 120,
+      aimX: -1,
+      aimY: 0,
+      lastShotAt: 0,
       input: {
         left: false,
         right: false,
@@ -79,6 +85,9 @@ export const state = {
       size: PLAYER_SIZE,
       x: 120,
       y: 448,
+      aimX: 1,
+      aimY: 0,
+      lastShotAt: 0,
       input: {
         left: false,
         right: false,
@@ -99,6 +108,9 @@ export const state = {
       size: PLAYER_SIZE,
       x: 748,
       y: 448,
+      aimX: -1,
+      aimY: 0,
+      lastShotAt: 0,
       input: {
         left: false,
         right: false,

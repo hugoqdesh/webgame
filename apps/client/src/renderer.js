@@ -1,7 +1,9 @@
 import { clientState } from "./state.js";
 
 const playerElements = {};
+const projectileElements = {};
 const container = document.getElementById("players");
+const projectileContainer = document.getElementById("projectiles");
 
 export function render() {
 	// Reuse DOM nodes; only create/remove when players join/leave.
@@ -47,6 +49,34 @@ export function render() {
 		if (!activeIds.has(id)) {
 			playerElements[id].remove();
 			delete playerElements[id];
+		}
+	}
+
+	const activeProjectileIds = new Set();
+	for (const projectile of clientState.projectiles || []) {
+		if (!projectile) continue;
+		activeProjectileIds.add(projectile.id);
+
+		if (!projectileElements[projectile.id]) {
+			const projectileElement = document.createElement("div");
+			projectileElement.className = "projectile";
+			projectileElement.dataset.ownerId = projectile.ownerId || "";
+			projectileElements[projectile.id] = projectileElement;
+			projectileContainer.appendChild(projectileElement);
+		}
+
+		const element = projectileElements[projectile.id];
+		if (projectile.size) {
+			element.style.width = `${projectile.size}px`;
+			element.style.height = `${projectile.size}px`;
+		}
+		element.style.transform = `translate(${projectile.x}px, ${projectile.y}px)`;
+	}
+
+	for (const id in projectileElements) {
+		if (!activeProjectileIds.has(id)) {
+			projectileElements[id].remove();
+			delete projectileElements[id];
 		}
 	}
 }

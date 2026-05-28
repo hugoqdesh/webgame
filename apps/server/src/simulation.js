@@ -1,4 +1,5 @@
 import { SERVER_CONFIG } from "./constants.js";
+import { GAME_CONFIG } from "../../../packages/shared/src/config.js";
 import { state } from "./state.js";
 
 const PLAYER_SPEED = 15;
@@ -6,6 +7,7 @@ const NAME_MAX = 12;
 const NAME_MIN = 1;
 const DEFAULT_LIVES = 5;
 const DEFAULT_HEALTH = 100;
+const PROJECTILE_TTL_MS = 1500;
 
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
@@ -36,6 +38,13 @@ function buildSnapshot(snapshotId, ts) {
   }
 
   const remainingMs = getTimerRemainingMs(ts);
+  const projectiles = state.projectiles.map((projectile) => ({
+    id: projectile.id,
+    ownerId: projectile.ownerId,
+    x: projectile.x,
+    y: projectile.y,
+    size: projectile.size,
+  }));
 
   return {
     type: "snapshot",
@@ -46,6 +55,7 @@ function buildSnapshot(snapshotId, ts) {
     winner: state.winner,
     notification: state.notification,
     players,
+    projectiles,
   };
 }
 
@@ -89,6 +99,7 @@ function resetPlayer(player) {
   player.lives = DEFAULT_LIVES;
   player.score = 0;
   player.eliminated = false;
+  player.lastShotAt = 0;
   player.input = { left: false, right: false, up: false, down: false };
 }
 
@@ -114,6 +125,7 @@ export function createSimulation(onSnapshot) {
   let snapshotId = 0;
   let snapshotDirty = true;
   let lastTimerSecond = null;
+  let nextProjectileId = 1;
 
   function handlePlayerDeparture(playerId, reason) {
     // Centralize disconnect/quit handling so snapshots stay consistent.
@@ -169,6 +181,12 @@ export function createSimulation(onSnapshot) {
       if (input.up) dy -= PLAYER_SPEED;
       if (input.down) dy += PLAYER_SPEED;
 
+      if (dx !== 0 || dy !== 0) {
+        const length = Math.hypot(dx, dy);
+        player.aimX = dx / length;
+        player.aimY = dy / length;
+      }
+
       const nextX = clamp(player.x + dx, 0, state.world.width - player.size);
       const nextY = clamp(player.y + dy, 0, state.world.height - player.size);
       if (nextX !== player.x || nextY !== player.y) {
@@ -180,12 +198,45 @@ export function createSimulation(onSnapshot) {
     return moved;
   }
 
+  function updateProjectiles(now) {
+    if (state.phase !== "running") return false;
+
+    let changed = false;
+    const activeProjectiles = [];
+    for (const projectile of state.projectiles) {
+      projectile.x += projectile.vx;
+      projectile.y += projectile.vy;
+
+      const expired = now - projectile.createdAt > projectile.ttlMs;
+      const outside =
+        projectile.x < -projectile.size ||
+        projectile.y < -projectile.size ||
+        projectile.x > state.world.width ||
+        projectile.y > state.world.height;
+
+      if (!expired && !outside) {
+        activeProjectiles.push(projectile);
+      } else {
+        changed = true;
+      }
+    }
+
+    if (state.projectiles.length > 0) {
+      changed = true;
+    }
+    state.projectiles = activeProjectiles;
+    return changed;
+  }
+
   function tick() {
     const now = Date.now();
     const delta = now - lastTick;
     if (delta >= SERVER_CONFIG.tickMs) {
       lastTick = now;
       if (updatePlayers()) {
+        snapshotDirty = true;
+      }
+      if (updateProjectiles(now)) {
         snapshotDirty = true;
       }
       if (state.phase === "running") {
@@ -330,6 +381,7 @@ export function createSimulation(onSnapshot) {
       state.timer.startedAt = Date.now();
       state.timer.pausedAt = null;
       state.timer.pausedTotalMs = 0;
+      state.projectiles = [];
       state.winner = null;
       state.notification = null;
       lastTimerSecond = null;
@@ -347,6 +399,40 @@ export function createSimulation(onSnapshot) {
         up: !!input.up,
         down: !!input.down,
       };
+    },
+    shoot(playerId, payload = {}) {
+      if (state.phase !== "running") return;
+      const player = state.players[playerId];
+      if (!player || !player.active || player.eliminated) return;
+
+      const now = Date.now();
+      if (now - player.lastShotAt < GAME_CONFIG.shootCooldownMs) return;
+
+      const requestedX = Number(payload.directionX);
+      const requestedY = Number(payload.directionY);
+      let directionX = Number.isFinite(requestedX) ? requestedX : player.aimX;
+      let directionY = Number.isFinite(requestedY) ? requestedY : player.aimY;
+      const length = Math.hypot(directionX, directionY) || 1;
+      directionX /= length;
+      directionY /= length;
+
+      player.aimX = directionX;
+      player.aimY = directionY;
+      player.lastShotAt = now;
+
+      state.projectiles.push({
+        id: `projectile-${nextProjectileId}`,
+        ownerId: player.id,
+        x: player.x + player.size / 2 - GAME_CONFIG.projectileSize / 2,
+        y: player.y + player.size / 2 - GAME_CONFIG.projectileSize / 2,
+        vx: directionX * GAME_CONFIG.projectileSpeed,
+        vy: directionY * GAME_CONFIG.projectileSpeed,
+        size: GAME_CONFIG.projectileSize,
+        createdAt: now,
+        ttlMs: PROJECTILE_TTL_MS,
+      });
+      nextProjectileId += 1;
+      snapshotDirty = true;
     },
   };
 }
