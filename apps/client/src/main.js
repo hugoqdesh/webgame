@@ -143,7 +143,9 @@ document.getElementById("overlay-quit").addEventListener("click", () => {
 });
 
 document.getElementById("play-again").addEventListener("click", () => {
-	location.reload();
+	if (socket.readyState === WebSocket.OPEN) {
+		socket.send(JSON.stringify({ type: "restart" }));
+	}
 });
 
 window.addEventListener("lobby:update", updateLobbyUI);
