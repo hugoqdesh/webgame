@@ -50,6 +50,7 @@ export function connect() {
 				}
 				clientState.snapshotId = msg.snapshotId ?? clientState.snapshotId;
 				clientState.players = msg.players;
+				clientState.projectiles = msg.projectiles || [];
 				clientState.phase = msg.phase || clientState.phase;
 				clientState.timerMs = msg.timerMs ?? clientState.timerMs;
 				if (msg.timerMs != null) syncTimer(msg.timerMs);

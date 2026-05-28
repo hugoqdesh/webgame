@@ -6,6 +6,7 @@ export const clientState = {
   isLead: false,
   phase: "lobby",
   players: {},
+  projectiles: [],
   snapshotId: null,
   timerMs: null,
   winner: null,
