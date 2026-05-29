@@ -6,6 +6,7 @@ export function initAudio() {
 		"click",
 		() => {
 			ctx = new (window.AudioContext || window.webkitAudioContext)();
+			ctx.resume();
 		},
 		{ once: true },
 	);
@@ -14,9 +15,9 @@ export function initAudio() {
 const SOUNDS = {
 	shoot: { freq: 660, dur: 0.08, type: "square" },
 	hit: { freq: 320, dur: 0.1, type: "sawtooth" },
-	life: { freq: 160, dur: 0.3, type: "triangle" },
+	death: { freq: 160, dur: 0.3, type: "triangle" },
 	start: { freq: 520, dur: 0.2, type: "sine" },
-	end: { freq: 240, dur: 0.5, type: "sine" },
+	over: { freq: 240, dur: 0.5, type: "sine" },
 };
 
 export function playSound(type) {

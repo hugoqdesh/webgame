@@ -3,7 +3,7 @@ import { initInput, getInputState, consumeShootAction } from "./input.js";
 import { render } from "./renderer.js";
 import { clientState } from "./state.js";
 import { updateHud } from "./ui.js";
-import { initAudio } from "./audio.js";
+import { initAudio, playSound } from "./audio.js";
 
 const socket = connect();
 initInput();
@@ -189,6 +189,7 @@ function loop() {
 		}
 		if (shootAction) {
 			socket.send(JSON.stringify({ type: "shoot", payload: shootAction }));
+			playSound("shoot");
 		}
 	}
 

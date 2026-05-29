@@ -1,5 +1,13 @@
 import { clientState } from "./state.js";
 import { syncTimer } from "./ui.js";
+import { playSound } from "./audio.js";
+
+function applyPhase(next) {
+	if (!next || next === clientState.phase) return;
+	if (next === "running" && clientState.phase !== "paused") playSound("start");
+	if (next === "ended") playSound("over");
+	clientState.phase = next;
+}
 
 export function connect() {
 	const proto = location.protocol === "https:" ? "wss" : "ws";
@@ -34,7 +42,7 @@ export function connect() {
 				return;
 			}
 			if (msg.type === "phase") {
-				clientState.phase = msg.phase || clientState.phase;
+				applyPhase(msg.phase);
 				window.dispatchEvent(new CustomEvent("phase:update"));
 				return;
 			}
@@ -48,10 +56,16 @@ export function connect() {
 				if (msg.snapshotId === clientState.snapshotId) {
 					return;
 				}
+				const prev = clientState.players[clientState.playerId];
+				const next = msg.players[clientState.playerId];
+				if (prev && next) {
+					if (next.lives < prev.lives) playSound("death");
+					else if (next.health < prev.health) playSound("hit");
+				}
 				clientState.snapshotId = msg.snapshotId ?? clientState.snapshotId;
 				clientState.players = msg.players;
 				clientState.projectiles = msg.projectiles || [];
-				clientState.phase = msg.phase || clientState.phase;
+				applyPhase(msg.phase);
 				clientState.timerMs = msg.timerMs ?? clientState.timerMs;
 				if (msg.timerMs != null) syncTimer(msg.timerMs);
 				clientState.winner = msg.winner ?? clientState.winner;
