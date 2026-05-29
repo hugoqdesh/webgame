@@ -3,9 +3,11 @@ import { initInput, getInputState, consumeShootAction } from "./input.js";
 import { render } from "./renderer.js";
 import { clientState } from "./state.js";
 import { updateHud } from "./ui.js";
+import { initAudio } from "./audio.js";
 
 const socket = connect();
 initInput();
+initAudio();
 
 let lastSent = 0;
 let lastInput = null;
