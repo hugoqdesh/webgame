@@ -313,7 +313,7 @@ export function createSimulation(onSnapshot) {
           }
           if (shooter.score >= 8) {
             console.log("winner is: " + shooter + ". this is placeholder");
-            state.phase
+            //state.phase
           }
           break;
         }
