@@ -287,8 +287,11 @@ export function createSimulation(onSnapshot) {
 
         if (hit) {
           hitSomeone = true;
+          const shooter = state.players[projectile.ownerId];
+          if (shooter) shooter.score += 1;
+          console.log(projectile.ownerId + " score is: " + shooter.score);
           console.log(projectile.ownerId + " HIT PLAYER " + player.id);
-          player.health -= 10;
+          player.health -= 50;
 
           console.log(
             player.id +
@@ -305,7 +308,12 @@ export function createSimulation(onSnapshot) {
           }
           if (player.lives <= 0) {
             console.log(player.id + " has been eliminated");
-            //player.eliminated = true;
+            player.eliminated = true;
+            if (shooter) shooter.score += 3;
+          }
+          if (shooter.score >= 8) {
+            console.log("winner is: " + shooter + ". this is placeholder");
+            state.phase
           }
           break;
         }
