@@ -260,7 +260,6 @@ export function createSimulation(onSnapshot) {
   }
 
   function updateProjectiles(now) {
-    const activePlayers = getActiveCombatants();
     if (state.phase !== "running") return false;
 
     let changed = false;
@@ -270,12 +269,16 @@ export function createSimulation(onSnapshot) {
         changed = true;
         continue;
       }
+      let hitSomeone = false;
 
       projectile.x += projectile.vx;
       projectile.y += projectile.vy;
 
+      const activePlayers = getActiveCombatants();
+
       for (const player of activePlayers) {
         if (player.id === projectile.ownerId) continue;
+
         const hit =
           projectile.x < player.x + player.size &&
           projectile.x + projectile.size > player.x &&
@@ -283,6 +286,7 @@ export function createSimulation(onSnapshot) {
           projectile.y + projectile.size > player.y;
 
         if (hit) {
+          hitSomeone = true;
           console.log(projectile.ownerId + " HIT PLAYER " + player.id);
           player.health -= 10;
 
@@ -293,16 +297,17 @@ export function createSimulation(onSnapshot) {
               " health and " +
               player.lives +
               " lives",
-
           );
           if (player.health <= 0) {
-                      player.lives -= 1;
+            player.lives -= 1;
             console.log(player.id + " has lost 1 life");
-            player.health = 100;
+            player.health = DEFAULT_HEALTH;
           }
           if (player.lives <= 0) {
             console.log(player.id + " has been eliminated");
+            //player.eliminated = true;
           }
+          break;
         }
       }
       const expired = now - projectile.createdAt > projectile.ttlMs;
@@ -312,7 +317,7 @@ export function createSimulation(onSnapshot) {
         projectile.x > state.world.width ||
         projectile.y > state.world.height;
 
-      if (!expired && !outside) {
+      if (!hitSomeone && !expired && !outside) {
         activeProjectiles.push(projectile);
       } else {
         changed = true;
