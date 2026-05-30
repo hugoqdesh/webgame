@@ -2,12 +2,12 @@ import { SERVER_CONFIG } from "./constants.js";
 import { GAME_CONFIG } from "../../../packages/shared/src/config.js";
 import { state } from "./state.js";
 
-const PLAYER_SPEED = 15;
+const PLAYER_SPEED = 8;
 const NAME_MAX = 12;
 const NAME_MIN = 1;
 const DEFAULT_LIVES = 5;
 const DEFAULT_HEALTH = 100;
-const PROJECTILE_TTL_MS = 1500;
+const PROJECTILE_TTL_MS = 5000;
 const PLAYER_SPAWNS = {
   player1: { x: 120, y: 120 },
   player2: { x: 748, y: 120 },
@@ -260,6 +260,7 @@ export function createSimulation(onSnapshot) {
   }
 
   function updateProjectiles(now) {
+    const activePlayers = getActiveCombatants();
     if (state.phase !== "running") return false;
 
     let changed = false;
@@ -273,6 +274,37 @@ export function createSimulation(onSnapshot) {
       projectile.x += projectile.vx;
       projectile.y += projectile.vy;
 
+      for (const player of activePlayers) {
+        if (player.id === projectile.ownerId) continue;
+        const hit =
+          projectile.x < player.x + player.size &&
+          projectile.x + projectile.size > player.x &&
+          projectile.y < player.y + player.size &&
+          projectile.y + projectile.size > player.y;
+
+        if (hit) {
+          console.log(projectile.ownerId + " HIT PLAYER " + player.id);
+          player.health -= 10;
+
+          console.log(
+            player.id +
+              " has " +
+              player.health +
+              " health and " +
+              player.lives +
+              " lives",
+
+          );
+          if (player.health <= 0) {
+                      player.lives -= 1;
+            console.log(player.id + " has lost 1 life");
+            player.health = 100;
+          }
+          if (player.lives <= 0) {
+            console.log(player.id + " has been eliminated");
+          }
+        }
+      }
       const expired = now - projectile.createdAt > projectile.ttlMs;
       const outside =
         projectile.x < -projectile.size ||
