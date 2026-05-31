@@ -266,6 +266,17 @@ export function createSimulation(onSnapshot) {
       endGame(state.notification || "Game ended");
     }
 
+    if (getActivePlayers().length === 0) {
+      state.phase = "lobby";
+      state.winner = null;
+      state.notification = null;
+      state.projectiles = [];
+      state.powerups = [];
+      state.timer.startedAt = null;
+      state.timer.pausedAt = null;
+      state.timer.pausedTotalMs = 0;
+    }
+
     snapshotDirty = true;
     return { phase: state.phase };
   }
@@ -519,7 +530,7 @@ export function createSimulation(onSnapshot) {
     },
     assignPlayer(name) {
       // Enforce unique names and capacity before a player is activated.
-      if (state.phase !== "lobby") {
+      if (state.phase === "running" || state.phase === "paused") {
         return { error: "Game already started" };
       }
 

@@ -126,11 +126,20 @@ resumeButton.addEventListener("click", () => {
 	}
 });
 
-quitButton.addEventListener("click", () => {
+function sendQuit() {
 	if (socket.readyState === WebSocket.OPEN) {
 		socket.send(JSON.stringify({ type: "quit" }));
 	}
-});
+	clientState.playerId = null;
+	clientState.name = null;
+	clientState.isLead = false;
+	clientState.phase = "lobby";
+	clientState.winner = null;
+	updateLobbyUI();
+	updateJoinForm();
+}
+
+quitButton.addEventListener("click", sendQuit);
 
 document.getElementById("overlay-resume").addEventListener("click", () => {
 	if (socket.readyState === WebSocket.OPEN) {
@@ -138,11 +147,7 @@ document.getElementById("overlay-resume").addEventListener("click", () => {
 	}
 });
 
-document.getElementById("overlay-quit").addEventListener("click", () => {
-	if (socket.readyState === WebSocket.OPEN) {
-		socket.send(JSON.stringify({ type: "quit" }));
-	}
-});
+document.getElementById("overlay-quit").addEventListener("click", sendQuit);
 
 document.getElementById("play-again").addEventListener("click", () => {
 	if (socket.readyState === WebSocket.OPEN) {
