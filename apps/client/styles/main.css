@@ -28,7 +28,14 @@ body {
 header {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   font-size: 13px;
+}
+
+#header-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
 }
 
 #timer {
@@ -200,14 +207,30 @@ input:disabled {
 
 button {
   cursor: pointer;
+  padding: 4px 16px;
+  font-size: 12px;
+  color: var(--fg);
+  border: 2px solid #333;
+  border-radius: 30px;
+  background: transparent;
+  transition:
+    background 0.15s ease,
+    border-color 0.15s ease;
 }
 
 button:hover:not(:disabled) {
-  text-decoration: underline;
+  background: var(--fg);
+  border-color: var(--fg);
+  color: #000;
+}
+
+button:active:not(:disabled) {
+  opacity: 0.85;
 }
 
 button:disabled {
   color: var(--mu);
+  border-color: #222;
   cursor: not-allowed;
 }
 
@@ -292,8 +315,7 @@ button:disabled {
 }
 
 .overlay button {
-  padding: 4px 12px;
-  border: 1px solid var(--mu);
+  padding: 6px 14px;
 }
 
 .overlay button:hover {
