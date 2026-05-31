@@ -359,31 +359,15 @@ export function createSimulation(onSnapshot) {
           hitSomeone = true;
           const shooter = state.players[projectile.ownerId];
           if (shooter) shooter.score += 1;
-          console.log(projectile.ownerId + " score is: " + shooter.score);
-          console.log(projectile.ownerId + " HIT PLAYER " + player.id);
           player.health -= 50;
 
-          console.log(
-            player.id +
-              " has " +
-              player.health +
-              " health and " +
-              player.lives +
-              " lives",
-          );
           if (player.health <= 0) {
             player.lives -= 1;
-            console.log(player.id + " has lost 1 life");
             player.health = DEFAULT_HEALTH;
           }
           if (player.lives <= 0) {
-            console.log(player.id + " has been eliminated");
             player.eliminated = true;
             if (shooter) shooter.score += 3;
-          }
-          if (shooter.score >= 8) {
-            console.log("winner is: " + shooter + ". this is placeholder");
-            //state.phase
           }
           break;
         }
