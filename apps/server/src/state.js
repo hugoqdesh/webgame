@@ -10,6 +10,7 @@ export const state = {
   },
 
   projectiles: [],
+  powerups: [],
 
   // Timer is server-owned so all clients see the same countdown.
   timer: {

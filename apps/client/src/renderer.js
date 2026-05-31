@@ -3,8 +3,10 @@ import { GAME_CONFIG } from "../../../packages/shared/src/config.js";
 
 const playerElements = {};
 const projectileElements = {};
+const powerupElements = {};
 const container = document.getElementById("players");
 const projectileContainer = document.getElementById("projectiles");
+const powerupContainer = document.getElementById("powerups");
 
 const wallContainer = document.getElementById("walls");
 for (const wall of GAME_CONFIG.walls || []) {
@@ -49,6 +51,11 @@ export function render() {
 		const element = playerElements[id];
 		element.style.transform = `translate(${player.x}px, ${player.y}px)`;
 
+		const effects = player.effects || [];
+		element.classList.toggle("fx-speed", effects.includes("speed"));
+		element.classList.toggle("fx-bullet", effects.includes("bullet"));
+		element.classList.toggle("fx-ghost", effects.includes("ghost"));
+
 		const pct = (player.health / 100) * 100;
 		const fill = element.querySelector(".hp-fill");
 		fill.style.width = `${pct}%`;
@@ -88,6 +95,32 @@ export function render() {
 		if (!activeProjectileIds.has(id)) {
 			projectileElements[id].remove();
 			delete projectileElements[id];
+		}
+	}
+
+	const activePowerupIds = new Set();
+	for (const powerup of clientState.powerups || []) {
+		if (!powerup) continue;
+		activePowerupIds.add(powerup.id);
+
+		if (!powerupElements[powerup.id]) {
+			const el = document.createElement("div");
+			el.className = `powerup powerup--${powerup.type}`;
+			el.style.width = `${powerup.size}px`;
+			el.style.height = `${powerup.size}px`;
+			powerupElements[powerup.id] = el;
+			powerupContainer.appendChild(el);
+		}
+		powerupElements[powerup.id].style.setProperty("--tx", `${powerup.x}px`);
+		powerupElements[powerup.id].style.setProperty("--ty", `${powerup.y}px`);
+	}
+
+	for (const id in powerupElements) {
+		if (!activePowerupIds.has(id)) {
+			const el = powerupElements[id];
+			delete powerupElements[id];
+			el.classList.add("powerup--collected");
+			el.addEventListener("animationend", () => el.remove(), { once: true });
 		}
 	}
 }

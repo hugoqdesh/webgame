@@ -6,6 +6,17 @@ export const GAME_CONFIG = {
 	projectileSize: 15,
 	shootCooldownMs: 250,
 
+	// Powerups
+	powerup: {
+		size: 20,
+		spawnIntervalMs: 10000,
+		maxActive: 3,
+		durationMs: 6000,
+		speedMultiplier: 1.5,
+		bulletMultiplier: 1.5,
+		types: ["speed", "bullet", "ghost"],
+	},
+
 	// Obstacles
 	walls: [
 		{ x: 415, y: 265, w: 70, h: 70 },

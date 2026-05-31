@@ -18,6 +18,7 @@ const SOUNDS = {
 	death: { freq: 160, dur: 0.3, type: "triangle" },
 	start: { freq: 520, dur: 0.2, type: "sine" },
 	over: { freq: 240, dur: 0.5, type: "sine" },
+	powerup: { freq: 880, dur: 0.15, type: "triangle" },
 };
 
 export function playSound(type) {

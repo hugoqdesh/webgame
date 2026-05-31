@@ -61,10 +61,14 @@ export function connect() {
 				if (prev && next) {
 					if (next.lives < prev.lives) playSound("death");
 					else if (next.health < prev.health) playSound("hit");
+					if ((next.effects?.length || 0) > (prev.effects?.length || 0)) {
+						playSound("powerup");
+					}
 				}
 				clientState.snapshotId = msg.snapshotId ?? clientState.snapshotId;
 				clientState.players = msg.players;
 				clientState.projectiles = msg.projectiles || [];
+				clientState.powerups = msg.powerups || [];
 				applyPhase(msg.phase);
 				clientState.timerMs = msg.timerMs ?? clientState.timerMs;
 				if (msg.timerMs != null) syncTimer(msg.timerMs);

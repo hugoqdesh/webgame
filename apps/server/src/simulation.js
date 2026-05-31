@@ -20,6 +20,7 @@ function clamp(value, min, max) {
 }
 
 const WALLS = GAME_CONFIG.walls || [];
+const PU = GAME_CONFIG.powerup;
 
 function hitsWall(x, y, w, h) {
   for (const wall of WALLS) {
@@ -33,6 +34,14 @@ function hitsWall(x, y, w, h) {
     }
   }
   return false;
+}
+
+function aabb(ax, ay, aw, ah, bx, by, bw, bh) {
+  return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by;
+}
+
+function hasEffect(player, type) {
+  return player.effects && player.effects[type] > Date.now();
 }
 
 function normalizeName(name) {
@@ -56,6 +65,7 @@ function buildSnapshot(snapshotId, ts) {
       lives: player.lives,
       score: player.score,
       eliminated: player.eliminated,
+      effects: activeEffects(player, ts),
     };
   }
 
@@ -80,7 +90,19 @@ function buildSnapshot(snapshotId, ts) {
     notification: state.notification,
     players,
     projectiles,
+    powerups: state.powerups.map((p) => ({
+      id: p.id,
+      type: p.type,
+      x: p.x,
+      y: p.y,
+      size: p.size,
+    })),
   };
+}
+
+function activeEffects(player, now) {
+  if (!player.effects) return [];
+  return PU.types.filter((type) => player.effects[type] > now);
 }
 
 function getActivePlayers() {
@@ -137,6 +159,7 @@ function resetPlayer(player, options = {}) {
   player.aimX = player.x < state.world.width / 2 ? 1 : -1;
   player.aimY = 0;
   player.lastShotAt = 0;
+  player.effects = {};
   player.input = { left: false, right: false, up: false, down: false };
 }
 
@@ -172,6 +195,8 @@ export function createSimulation(onSnapshot) {
   let snapshotDirty = true;
   let lastTimerSecond = null;
   let nextProjectileId = 1;
+  let nextPowerupId = 1;
+  let lastPowerupSpawn = 0;
 
   function canPlayRound() {
     const activePlayers = getActivePlayers();
@@ -191,11 +216,14 @@ export function createSimulation(onSnapshot) {
     state.timer.pausedAt = null;
     state.timer.pausedTotalMs = 0;
     state.projectiles = [];
+    state.powerups = [];
     state.winner = null;
     state.notification = null;
     state.phase = "running";
     lastTimerSecond = null;
     nextProjectileId = 1;
+    nextPowerupId = 1;
+    lastPowerupSpawn = now;
     snapshotDirty = true;
   }
 
@@ -204,6 +232,7 @@ export function createSimulation(onSnapshot) {
     state.winner = selectWinner();
     state.notification = notification;
     state.projectiles = [];
+    state.powerups = [];
     snapshotDirty = true;
   }
 
@@ -250,13 +279,16 @@ export function createSimulation(onSnapshot) {
       if (!player.active || player.eliminated) continue;
 
       const input = player.input;
+      const speed = hasEffect(player, "speed")
+        ? PLAYER_SPEED * PU.speedMultiplier
+        : PLAYER_SPEED;
       let dx = 0;
       let dy = 0;
 
-      if (input.left) dx -= PLAYER_SPEED;
-      if (input.right) dx += PLAYER_SPEED;
-      if (input.up) dy -= PLAYER_SPEED;
-      if (input.down) dy += PLAYER_SPEED;
+      if (input.left) dx -= speed;
+      if (input.right) dx += speed;
+      if (input.up) dy -= speed;
+      if (input.down) dy += speed;
 
       if (dx !== 0 || dy !== 0) {
         const length = Math.hypot(dx, dy);
@@ -266,12 +298,15 @@ export function createSimulation(onSnapshot) {
 
       const nextX = clamp(player.x + dx, 0, state.world.width - player.size);
       const nextY = clamp(player.y + dy, 0, state.world.height - player.size);
+      const canPass =
+        hasEffect(player, "ghost") ||
+        hitsWall(player.x, player.y, player.size, player.size);
       let resolvedX = player.x;
       let resolvedY = player.y;
-      if (!hitsWall(nextX, resolvedY, player.size, player.size)) {
+      if (canPass || !hitsWall(nextX, resolvedY, player.size, player.size)) {
         resolvedX = nextX;
       }
-      if (!hitsWall(resolvedX, nextY, player.size, player.size)) {
+      if (canPass || !hitsWall(resolvedX, nextY, player.size, player.size)) {
         resolvedY = nextY;
       }
       if (resolvedX !== player.x || resolvedY !== player.y) {
@@ -369,6 +404,61 @@ export function createSimulation(onSnapshot) {
     return changed;
   }
 
+  function spawnPowerup(now) {
+    for (let attempt = 0; attempt < 10; attempt++) {
+      const x = 40 + Math.random() * (state.world.width - 80 - PU.size);
+      const y = 40 + Math.random() * (state.world.height - 80 - PU.size);
+      if (hitsWall(x, y, PU.size, PU.size)) continue;
+      const onPlayer = getActiveCombatants().some((p) =>
+        aabb(x, y, PU.size, PU.size, p.x, p.y, p.size, p.size),
+      );
+      if (onPlayer) continue;
+      const type = PU.types[Math.floor(Math.random() * PU.types.length)];
+      state.powerups.push({ id: `pu-${nextPowerupId++}`, type, x, y, size: PU.size });
+      return true;
+    }
+    return false;
+  }
+
+  function updatePowerups(now) {
+    if (state.phase !== "running") return false;
+    let changed = false;
+
+    for (const id in state.players) {
+      const effects = state.players[id].effects;
+      for (const type in effects) {
+        if (effects[type] <= now) {
+          delete effects[type];
+          changed = true;
+        }
+      }
+    }
+
+    if (
+      state.powerups.length < PU.maxActive &&
+      now - lastPowerupSpawn >= PU.spawnIntervalMs
+    ) {
+      lastPowerupSpawn = now;
+      if (spawnPowerup(now)) changed = true;
+    }
+
+    const remaining = [];
+    for (const pu of state.powerups) {
+      let taken = false;
+      for (const player of getActiveCombatants()) {
+        if (aabb(pu.x, pu.y, pu.size, pu.size, player.x, player.y, player.size, player.size)) {
+          player.effects[pu.type] = now + PU.durationMs;
+          taken = true;
+          break;
+        }
+      }
+      if (taken) changed = true;
+      else remaining.push(pu);
+    }
+    state.powerups = remaining;
+    return changed;
+  }
+
   function tick() {
     const now = Date.now();
     const delta = now - lastTick;
@@ -378,6 +468,9 @@ export function createSimulation(onSnapshot) {
         snapshotDirty = true;
       }
       if (updateProjectiles(now)) {
+        snapshotDirty = true;
+      }
+      if (updatePowerups(now)) {
         snapshotDirty = true;
       }
       if (state.phase === "running") {
@@ -499,6 +592,13 @@ export function createSimulation(onSnapshot) {
         for (const projectile of state.projectiles) {
           projectile.createdAt += pausedMs;
         }
+        for (const id in state.players) {
+          const effects = state.players[id].effects;
+          for (const type in effects) {
+            effects[type] += pausedMs;
+          }
+        }
+        lastPowerupSpawn += pausedMs;
       }
       state.phase = "running";
       state.notification = `${requester.name} resumed the game`;
@@ -592,13 +692,17 @@ export function createSimulation(onSnapshot) {
       player.aimY = directionY;
       player.lastShotAt = now;
 
+      const bulletSpeed = hasEffect(player, "bullet")
+        ? GAME_CONFIG.projectileSpeed * PU.bulletMultiplier
+        : GAME_CONFIG.projectileSpeed;
+
       state.projectiles.push({
         id: `projectile-${nextProjectileId}`,
         ownerId: player.id,
         x: player.x + player.size / 2 - GAME_CONFIG.projectileSize / 2,
         y: player.y + player.size / 2 - GAME_CONFIG.projectileSize / 2,
-        vx: directionX * GAME_CONFIG.projectileSpeed,
-        vy: directionY * GAME_CONFIG.projectileSpeed,
+        vx: directionX * bulletSpeed,
+        vy: directionY * bulletSpeed,
         size: GAME_CONFIG.projectileSize,
         createdAt: now,
         ttlMs: PROJECTILE_TTL_MS,
