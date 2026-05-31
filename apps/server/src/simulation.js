@@ -19,6 +19,22 @@ function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
 }
 
+const WALLS = GAME_CONFIG.walls || [];
+
+function hitsWall(x, y, w, h) {
+  for (const wall of WALLS) {
+    if (
+      x < wall.x + wall.w &&
+      x + w > wall.x &&
+      y < wall.y + wall.h &&
+      y + h > wall.y
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
 function normalizeName(name) {
   if (!name) return "";
   return String(name).trim().slice(0, NAME_MAX);
@@ -250,11 +266,19 @@ export function createSimulation(onSnapshot) {
 
       const nextX = clamp(player.x + dx, 0, state.world.width - player.size);
       const nextY = clamp(player.y + dy, 0, state.world.height - player.size);
-      if (nextX !== player.x || nextY !== player.y) {
+      let resolvedX = player.x;
+      let resolvedY = player.y;
+      if (!hitsWall(nextX, resolvedY, player.size, player.size)) {
+        resolvedX = nextX;
+      }
+      if (!hitsWall(resolvedX, nextY, player.size, player.size)) {
+        resolvedY = nextY;
+      }
+      if (resolvedX !== player.x || resolvedY !== player.y) {
         moved = true;
       }
-      player.x = nextX;
-      player.y = nextY;
+      player.x = resolvedX;
+      player.y = resolvedY;
     }
     return moved;
   }
@@ -324,8 +348,14 @@ export function createSimulation(onSnapshot) {
         projectile.y < -projectile.size ||
         projectile.x > state.world.width ||
         projectile.y > state.world.height;
+      const blocked = hitsWall(
+        projectile.x,
+        projectile.y,
+        projectile.size,
+        projectile.size,
+      );
 
-      if (!hitSomeone && !expired && !outside) {
+      if (!hitSomeone && !expired && !outside && !blocked) {
         activeProjectiles.push(projectile);
       } else {
         changed = true;

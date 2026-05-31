@@ -79,6 +79,14 @@ header {
   will-change: transform;
 }
 
+.wall {
+  position: absolute;
+  top: 0;
+  left: 0;
+  background: #5a3d26;
+  box-sizing: border-box;
+}
+
 .hp-bar {
   position: absolute;
   bottom: 100%;

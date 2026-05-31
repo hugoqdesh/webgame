@@ -1,9 +1,20 @@
 import { clientState } from "./state.js";
+import { GAME_CONFIG } from "../../../packages/shared/src/config.js";
 
 const playerElements = {};
 const projectileElements = {};
 const container = document.getElementById("players");
 const projectileContainer = document.getElementById("projectiles");
+
+const wallContainer = document.getElementById("walls");
+for (const wall of GAME_CONFIG.walls || []) {
+	const el = document.createElement("div");
+	el.className = "wall";
+	el.style.width = `${wall.w}px`;
+	el.style.height = `${wall.h}px`;
+	el.style.transform = `translate(${wall.x}px, ${wall.y}px)`;
+	wallContainer.appendChild(el);
+}
 
 export function render() {
 	// Reuse DOM nodes; only create/remove when players join/leave.
